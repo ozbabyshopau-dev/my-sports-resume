@@ -1,0 +1,103 @@
+-- My Sports Resume
+-- Private highlight video upload planning scaffold only
+-- This file is intentionally planning-only. Keep it as guidance until
+-- private highlight video rollout is explicitly approved.
+
+-- Planned private bucket
+--   msr-highlight-videos
+--
+-- Planned rules
+--   - bucket stays private
+--   - no public read policy
+--   - no unauthenticated access
+--   - owner-only upload/read/update/delete
+--   - signed preview URLs only
+--   - junior videos require parent/guardian approval
+--   - admin review required before any broader visibility
+--   - no public_url delivery
+
+-- Example bucket creation for a future approved rollout:
+-- insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+-- values (
+--   'msr-highlight-videos',
+--   'msr-highlight-videos',
+--   false,
+--   104857600,
+--   array['video/mp4', 'video/quicktime', 'video/webm']
+-- )
+-- on conflict (id) do update
+-- set
+--   public = excluded.public,
+--   file_size_limit = excluded.file_size_limit,
+--   allowed_mime_types = excluded.allowed_mime_types;
+
+-- Example owner-only insert policy for future use:
+-- create policy "video objects own insert"
+-- on storage.objects
+-- for insert
+-- to authenticated
+-- with check (
+--   bucket_id = 'msr-highlight-videos'
+--   and name like 'user/' || auth.uid() || '/%'
+-- );
+
+-- Example owner-only select policy for future use:
+-- create policy "video objects own select"
+-- on storage.objects
+-- for select
+-- to authenticated
+-- using (
+--   bucket_id = 'msr-highlight-videos'
+--   and name like 'user/' || auth.uid() || '/%'
+-- );
+
+-- Example owner-only update policy for future use:
+-- create policy "video objects own update"
+-- on storage.objects
+-- for update
+-- to authenticated
+-- using (
+--   bucket_id = 'msr-highlight-videos'
+--   and name like 'user/' || auth.uid() || '/%'
+-- )
+-- with check (
+--   bucket_id = 'msr-highlight-videos'
+--   and name like 'user/' || auth.uid() || '/%'
+-- );
+
+-- Example owner-only delete policy for future use:
+-- create policy "video objects own delete"
+-- on storage.objects
+-- for delete
+-- to authenticated
+-- using (
+--   bucket_id = 'msr-highlight-videos'
+--   and name like 'user/' || auth.uid() || '/%'
+-- );
+
+-- Keep this future public-read idea commented out unless a separate
+-- approval-safe public video phase is explicitly approved:
+-- create policy "video objects approved public read"
+-- on storage.objects
+-- for select
+-- to anon
+-- using (
+--   bucket_id = 'msr-highlight-videos'
+--   and false
+-- );
+
+-- Planned path convention:
+--   user/{userId}/highlights/{highlightId}/{mediaAssetId}-{safeFileName}
+--
+-- Planned allowed types:
+--   - video/mp4
+--   - video/quicktime
+--   - video/webm
+--
+-- Planned initial max size:
+--   - 100MB
+--
+-- Planned delivery:
+--   - signed owner-only preview URLs
+--   - no public URLs
+--   - no public browsing
