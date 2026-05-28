@@ -30,9 +30,7 @@ export const AUSTRALIAN_AGE_GROUPS = [
   "Open",
   "Reserve Grade",
   "First Grade",
-  "Ladies League Tag",
-  "Girls League Tag",
-  "Women's Tackle",
+  "Women's",
   "Masters",
   "Other",
 ];
@@ -55,27 +53,13 @@ export const COMPETITION_LEVELS = [
 
 const TEAM_SPORTS_AGE_GROUPS = [...AUSTRALIAN_AGE_GROUPS];
 const INDIVIDUAL_AGE_GROUPS = [
-  "Under 6",
-  "Under 7",
   "Under 8",
-  "Under 9",
   "Under 10",
-  "Under 11",
   "Under 12",
-  "Under 13",
   "Under 14",
-  "Under 15",
   "Under 16",
-  "Under 17",
   "Under 18",
-  "Under 19",
-  "Under 21",
   "Open",
-  "Reserve Grade",
-  "First Grade",
-  "Ladies League Tag",
-  "Girls League Tag",
-  "Women's Tackle",
   "Masters",
   "Other",
 ];
@@ -152,10 +136,10 @@ export const sportsCatalog = [
   }),
   teamSport({
     id: "soccer-football",
-    name: "Soccer / Football",
+    name: "Soccer",
     category: "Football codes",
-    aliases: ["Soccer", "Football"],
-    commonPositions: ["Goalkeeper", "Centre Back", "Full Back", "Defensive Midfielder", "Central Midfielder", "Attacking Midfielder", "Winger", "Striker"],
+    aliases: ["Soccer / Football", "Football"],
+    commonPositions: ["Goalkeeper", "Defender", "Fullback", "Midfielder", "Winger", "Striker", "Utility", "Other"],
     commonStats: ["Goals", "Assists", "Key passes", "Tackles won", "Clean sheets"],
   }),
   teamSport({

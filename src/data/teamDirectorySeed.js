@@ -45,7 +45,7 @@ export const teamDirectorySeed = [
   {
     id: "team-soccer-riverina-united",
     name: "Riverina United FC",
-    sport: "Soccer / Football",
+    sport: "Soccer",
     region: "Regional NSW",
     state: "NSW",
     competition: "Riverina Junior Football League",
@@ -55,7 +55,7 @@ export const teamDirectorySeed = [
   {
     id: "team-soccer-sydney-harbour-fc",
     name: "Sydney Harbour FC",
-    sport: "Soccer / Football",
+    sport: "Soccer",
     region: "Sydney Metro",
     state: "NSW",
     competition: "Metro Youth Premier League",

@@ -6,18 +6,22 @@ My Sports Resume is a premium React + Vite sports resume platform with guarded S
 
 - full app QA pass completed
 - `npm run build` passes
+- selected black/gold multi-sport hero banner is wired into the homepage hero
+- approved standalone My Sports Resume logo is wired into the header, homepage brand mark, and auth/account logo badge areas
 - Supabase Auth works
 - app user profiles, athlete profiles, highlights metadata, opportunities metadata, contact requests, shortlists, admin queues, and media assets all have guarded Supabase-backed paths
 - private profile photo, highlight thumbnail, and highlight video uploads work for signed-in owner use
 - signed private previews work
-- main profile/search/opportunity flow now starts with a simple sport list, then postcode/suburb, then suggested clubs/teams
-- NSW Rugby League Group 2 starter clubs are seeded in a postcode/suburb directory for easier testing
+- main profile/search/opportunity flow now starts with postcode/suburb and a simple sport list, then suggested clubs/teams
+- the simple main sports list now covers Rugby League, Rugby Union, AFL, Soccer, Netball, Basketball, Cricket, Touch Football, Oztag, Athletics, Swimming, Boxing, Martial Arts, Tennis, Hockey, Golf, Baseball, Softball, Volleyball, Rowing, Surf Life Saving, and Other
+- the postcode-first starter directory now supports a multi-sport 2460 / Grafton / South Grafton / Clarence Valley seed
+- NSW Rugby League Group 2 starter clubs are retained in the postcode/suburb directory for easier testing
 - a starter NSW Rugby League directory now powers click-based group, club, position, and highlight-type selectors for the first real sport focus
 - broad sport categories are now internal catalogue metadata instead of the primary user-facing filter path
 - Rugby League age groups now run cleanly from `Under 6` through `Under 18`, with senior footy options starting after that
-- Highlight Manager now uses click-based Rugby League highlight chips plus collapsed optional match details so kids and parents do not need to type long match context just to save a clip
-- the NSW Rugby League directory is starter and expandable, not a complete official national club database yet
-- custom unverified club and competition fallback remains available when a family cannot find the right starter entry
+- Highlight Manager now uses click-based sport-specific highlight chips plus collapsed optional match details so kids and parents do not need to type long match context just to save a clip
+- the Australian sports directory is starter and expandable, not a complete official national club database yet
+- custom club and competition fallback remains available when a family cannot find the right starter entry and displays as `Added manually - pending verification`
 - public media access remains disabled
 - public media URLs remain disabled
 - public media feed remains disabled

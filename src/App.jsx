@@ -16,6 +16,8 @@ import {
   sampleParentAccounts,
   sampleVerifiedAccounts,
 } from "./data/sampleData";
+import mySportsResumeApprovedLogo from "./assets/my-sports-resume-approved-logo.png";
+import msrHeroBanner from "./assets/msr-hero-banner.png";
 import {
   AUSTRALIAN_AGE_GROUPS,
   COMPETITION_LEVELS,
@@ -25,13 +27,15 @@ import {
 import {
   AUSTRALIAN_CUSTOM_CLUB_VALUE,
   getAgeGroupsForClub,
+  getAgeGroupsForSport as getDirectoryAgeGroupsForSport,
   getClubByName,
   getClubSuggestionsByPostcode,
   getClubSuggestionsBySuburb,
+  getHighlightTypesForSport as getDirectoryHighlightTypesForSport,
+  getMainSportsList,
   getNearbySportsDirectory,
   getNearbyClubSuggestions,
   getPositionsForSport as getDirectoryPositionsForSport,
-  getSportsList,
 } from "./data/australianSportsClubDirectory";
 import { opportunitySeed } from "./data/opportunitySeed";
 import {
@@ -203,6 +207,43 @@ const DEFAULT_PLAYING_HISTORY = {
   academyHistory: [],
 };
 
+const QUICK_PROFILE_SETUP_STEPS = [
+  "Who is the athlete?",
+  "Where do they play?",
+  "Age and position",
+  "Save profile",
+];
+
+const PROFILE_YEARS_PLAYED_OPTIONS = [
+  "First season",
+  "1-2 seasons",
+  "3-5 seasons",
+  "6+ seasons",
+  "Not sure",
+];
+
+const RUGBY_LEAGUE_PROFILE_STAT_CHIPS = [
+  "Tries",
+  "Try assists",
+  "Line breaks",
+  "Tackles",
+  "Tackle efficiency",
+  "Run metres",
+  "Goal kicks",
+  "Other",
+];
+
+const PROFILE_ACHIEVEMENT_QUICK_CHIPS = [
+  { label: "Team award", field: "awards" },
+  { label: "Best and fairest", field: "bestAndFairest" },
+  { label: "Player of the match", field: "mvpAwards" },
+  { label: "Representative selection", field: "representativeSelections" },
+  { label: "Grand final", field: "finalsHistory" },
+  { label: "Carnival / tournament", field: "carnivalResults" },
+  { label: "Captain / leadership", field: "otherAchievements" },
+  { label: "Other", field: "otherAchievements" },
+];
+
 const DEFAULT_ACHIEVEMENT_SECTIONS = {
   awards: [],
   representativeSelections: [],
@@ -325,6 +366,7 @@ const PROFILE_DEFAULTS = {
   teamDirectoryId: "",
   clubEntryType: "custom",
   isVerifiedClubEntry: false,
+  profileSummary: "",
   competition: "",
   competitionLevel: "Local Club",
   verificationBadges: [],
@@ -945,7 +987,7 @@ function getSportOptionsByCategory(category) {
 }
 
 function getSimpleSportOptions() {
-  return getSportsList();
+  return getMainSportsList();
 }
 
 function sportFilterMatches(selectedSport, candidateSport) {
@@ -1020,6 +1062,13 @@ function getSportPositionOptions(sportId) {
 }
 
 function getHighlightTagSuggestions(sportId) {
+  const sportDefinition = findSportDefinition(sportId);
+  const sportName = sportDefinition?.name || sportId;
+  const directoryTypes = getDirectoryHighlightTypesForSport(sportName);
+  if (directoryTypes.length > 0) {
+    return directoryTypes.filter((item) => item !== NSW_RUGBY_LEAGUE_OTHER_OPTION);
+  }
+
   return HIGHLIGHT_TAGS_BY_SPORT[sportId] || [];
 }
 
@@ -1070,17 +1119,19 @@ function getResolvedProfileFormValues(formPayload) {
         formPayload?.customSecondaryPosition,
       )
     : String(formPayload?.secondaryPosition || "").trim();
-  const resolvedRegion = usesStructuredDirectory
+  const rawResolvedRegion = usesStructuredDirectory
     ? resolveSelectableValue(
         formPayload?.region,
         formPayload?.customGroupRegion,
         NSW_RUGBY_LEAGUE_OTHER_REGION_VALUE,
       )
     : String(formPayload?.region || "").trim();
-  const resolvedClub = usesStructuredDirectory
-    ? String(formPayload?.club || "").trim() === NSW_RUGBY_LEAGUE_CUSTOM_CLUB_VALUE
-      ? String(formPayload?.customClubName || formPayload?.currentTeam || "").trim()
-      : String(formPayload?.club || formPayload?.currentTeam || "").trim()
+  const clubValue = String(formPayload?.club || "").trim();
+  const usesCustomClubValue =
+    clubValue === NSW_RUGBY_LEAGUE_CUSTOM_CLUB_VALUE ||
+    clubValue === AUSTRALIAN_CUSTOM_CLUB_VALUE;
+  const resolvedClub = usesCustomClubValue
+    ? String(formPayload?.customClubName || formPayload?.currentTeam || "").trim()
     : String(formPayload?.club || formPayload?.currentTeam || "").trim();
   const matchedTeam =
     (formPayload?.teamDirectoryId && TEAMS_BY_ID[formPayload.teamDirectoryId]) ||
@@ -1088,13 +1139,22 @@ function getResolvedProfileFormValues(formPayload) {
       name: resolvedClub,
       sportDefinition,
       state: formPayload?.state,
-      region: resolvedRegion,
+      region: rawResolvedRegion,
     }) ||
     findStarterClubDirectoryEntry({
       name: resolvedClub,
       sportDefinition,
       state: formPayload?.state,
     });
+  const resolvedRegion = String(
+    rawResolvedRegion ||
+      matchedTeam?.region ||
+      matchedTeam?.groupOrAssociation ||
+      formPayload?.suburb ||
+      formPayload?.postcode ||
+      formPayload?.state ||
+      "",
+  ).trim();
   const resolvedCompetition = String(
     formPayload?.customCompetitionGroup ||
       formPayload?.mainCompetition ||
@@ -2187,6 +2247,7 @@ function enrichProfileRecord(item) {
   return {
     ...PROFILE_DEFAULTS,
     ...item,
+    profileSummary: String(item?.profileSummary || "").trim(),
     sportId: sportDefinition.id,
     sportCategory: item?.sportCategory || sportDefinition.category,
     sport: sportDefinition.name,
@@ -2795,13 +2856,14 @@ function createProfileFormDefaults(selectedRole = DEFAULT_SELECTED_ROLE) {
     club: "",
     customClubName: "",
     currentTeam: "",
+    profileSummary: "",
     teamDirectoryId: "",
     clubEntryType: "custom",
     isVerifiedClubEntry: false,
     competition: "",
     mainCompetition: "",
     customCompetitionGroup: "",
-    competitionLevel: "",
+    competitionLevel: "Local Club",
     height: "",
     weight: "",
     dominantSide: "",
@@ -3208,6 +3270,11 @@ function getVerificationSummary(profile) {
 function getProfileAbout(profile) {
   if (!profile) {
     return "";
+  }
+
+  const profileSummary = String(profile.profileSummary || "").trim();
+  if (profileSummary) {
+    return profileSummary;
   }
 
   const achievement = profile.achievements?.[0];
@@ -8292,6 +8359,7 @@ function App() {
       ...PROFILE_DEFAULTS,
       id: createStableAthleteProfileId(),
       displayName: formPayload.displayName || "Untitled Athlete",
+      profileSummary: formPayload.profileSummary || "",
       ageGroup: resolvedForm.resolvedAgeGroup || getDefaultAgeGroup(isJunior),
       isJunior,
       sportId: sportDefinition.id,
@@ -9570,7 +9638,7 @@ function App() {
         <div className="nav-shell">
           <Link className="brand-lockup" to="/">
             <span className="brand-mark" aria-hidden="true">
-              <span>MSR</span>
+              <img src={mySportsResumeApprovedLogo} alt="" />
             </span>
             <div className="brand-copy">
               <span className="brand-kicker">Premium sports resume platform</span>
@@ -9996,7 +10064,7 @@ function App() {
               isActive ? "mobile-nav-link active" : "mobile-nav-link"
             }
           >
-            <span className="mobile-nav-kicker">MSR</span>
+            <img className="mobile-nav-logo" src={mySportsResumeApprovedLogo} alt="" />
             <span>{item.label}</span>
           </NavLink>
         ))}
@@ -10254,6 +10322,7 @@ function LoginPage({ account, onLogin, realAuthEnabled, statusMessage }) {
 
       <div className="two-up-grid">
         <article className="surface-card dashboard-panel">
+          <BrandLogoBadge compact />
           <p className="card-kicker">Account access</p>
           <h3>{realAuthEnabled ? "Supabase login" : "Local demo login"}</h3>
           <p className="card-body">
@@ -10474,6 +10543,7 @@ function CreateAccountPage({ account, onCreateAccount, realAuthEnabled, statusMe
 
       <div className="two-up-grid">
         <article className="surface-card dashboard-panel">
+          <BrandLogoBadge compact />
           <p className="card-kicker">Create account</p>
           <h3>{realAuthEnabled ? "Supabase account details" : "Local demo account details"}</h3>
           {realAuthEnabled ? (
@@ -10800,6 +10870,7 @@ function AccountPage({
 
       <div className="two-up-grid">
         <article className="surface-card dashboard-panel">
+          <BrandLogoBadge compact />
           <p className="card-kicker">{accountLabel}</p>
           <h3>Account overview</h3>
           <div className="detail-list">
@@ -12796,10 +12867,16 @@ function HomePage({
     <section className="page-stack concept-home">
       <section className="hero-stage concept-hero-stage">
         <article className="hero-card premium-hero concept-hero-shell">
+          <div className="hero-visual-panel hero-banner-panel">
+            <img
+              alt="My Sports Resume multi-sport hero banner"
+              src={msrHeroBanner}
+            />
+          </div>
           <div className="hero-copy concept-hero-copy">
             <div className="hero-pretitle-row">
               <span className="hero-shield-mark" aria-hidden="true">
-                MSR
+                <img src={mySportsResumeApprovedLogo} alt="" />
               </span>
               <p className="eyebrow">Built for Australian sport</p>
             </div>
@@ -14728,10 +14805,15 @@ function OpportunitiesBoardPage({
     form.state === "NSW" && form.sport === "Rugby League";
   const opportunityAgeFilterOptions = usesStructuredOpportunityAgeFilters
     ? ["All", ...NSW_RUGBY_LEAGUE_FILTER_AGE_GROUP_OPTIONS]
-    : ["All", ...AUSTRALIAN_AGE_GROUPS];
+    : [
+        "All",
+        ...(filters.sport !== "All"
+          ? getDirectoryAgeGroupsForSport(filters.sport)
+          : AUSTRALIAN_AGE_GROUPS),
+      ];
   const opportunityAgeFormOptions = usesStructuredOpportunityAgeForm
     ? NSW_RUGBY_LEAGUE_FILTER_AGE_GROUP_OPTIONS
-    : AUSTRALIAN_AGE_GROUPS;
+    : getDirectoryAgeGroupsForSport(form.sport);
   const regionOptions = [
     "All",
     ...new Set(
@@ -15205,6 +15287,9 @@ function OpportunitiesBoardPage({
               value={form.positionRole}
               onChange={(value) => updateForm("positionRole", value)}
               placeholder="Halfback, key defender, opening batter, shooter"
+              listId="opportunity-position-options"
+              listOptions={getDirectoryPositionsForSport(form.sport)}
+              helper="Use a suggested sport role where possible; custom roles are still allowed."
             />
             <FormField
               label="Age group"
@@ -15723,6 +15808,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
   const [form, setForm] = useState(() => createProfileFormDefaults(selectedRole));
   const [status, setStatus] = useState("");
   const [lastSavedSummary, setLastSavedSummary] = useState(null);
+  const [advancedDetailsExpanded, setAdvancedDetailsExpanded] = useState(false);
   const isJunior = form.ageCategory === "Junior";
   const sportDefinition =
     findSportDefinition(form.sportId || form.sport) || getDefaultSportDefinition();
@@ -15736,15 +15822,16 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
   const sportOptions = [...new Set([...localSportOptions, ...baseSportOptions])];
   const hasLocationSearch = Boolean(String(form.postcode || form.suburb || "").trim());
   const usesStructuredRugbyLeagueForm = isStructuredNswRugbyLeagueMode(sportDefinition, form.state);
+  const selectedSportName = form.sport || sportDefinition?.name || "Other";
   const positionOptions = usesStructuredRugbyLeagueForm
     ? NSW_RUGBY_LEAGUE_POSITION_OPTIONS
-    : getDirectoryPositionsForSport(form.sport || sportDefinition?.name);
+    : getDirectoryPositionsForSport(selectedSportName);
   const secondaryPositionOptions = positionOptions.filter(
     (item) => item === NSW_RUGBY_LEAGUE_OTHER_OPTION || item !== form.position,
   );
   const ageGroupOptions = usesStructuredRugbyLeagueForm
     ? NSW_RUGBY_LEAGUE_AGE_GROUP_OPTIONS
-    : NSW_RUGBY_LEAGUE_AGE_GROUP_OPTIONS;
+    : getDirectoryAgeGroupsForSport(selectedSportName);
   const competitionLevelOptions = usesStructuredRugbyLeagueForm
     ? getNswRugbyLeagueCompetitionLevelOptions(form.region)
     : getCompetitionLevelOptionsForSport(sportDefinition);
@@ -15786,28 +15873,29 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
   const showCustomGroupField =
     usesStructuredRugbyLeagueForm && form.region === NSW_RUGBY_LEAGUE_OTHER_REGION_VALUE;
   const showCustomCompetitionField = showCustomClubField || showCustomGroupField;
-  const showCustomAgeGroupField =
-    usesStructuredRugbyLeagueForm && form.ageGroup === NSW_RUGBY_LEAGUE_OTHER_OPTION;
-  const showCustomPositionField =
-    usesStructuredRugbyLeagueForm && form.position === NSW_RUGBY_LEAGUE_OTHER_OPTION;
+  const showCustomAgeGroupField = form.ageGroup === NSW_RUGBY_LEAGUE_OTHER_OPTION;
+  const showCustomPositionField = form.position === NSW_RUGBY_LEAGUE_OTHER_OPTION;
   const showCustomSecondaryPositionField =
-    usesStructuredRugbyLeagueForm &&
     form.secondaryPosition === NSW_RUGBY_LEAGUE_OTHER_OPTION;
   const showCustomHighlightTypeField =
-    usesStructuredRugbyLeagueForm && form.highlightType === NSW_RUGBY_LEAGUE_OTHER_OPTION;
-  const profileHighlightOptions = usesStructuredRugbyLeagueForm
-    ? NSW_RUGBY_LEAGUE_HIGHLIGHT_TYPE_OPTIONS
-    : [
-        ...new Set([
-          ...getHighlightTagSuggestions(sportDefinition.id),
-          "Match highlight",
-          "Training clip",
-          "Tournament highlight",
-          "Skills session",
-          "Combine / testing",
-          "Event performance",
-        ]),
-      ];
+    form.highlightType === NSW_RUGBY_LEAGUE_OTHER_OPTION;
+  const profileHighlightOptions = getDirectoryHighlightTypesForSport(selectedSportName);
+  const quickStatChips =
+    selectedSportName === "Rugby League"
+      ? RUGBY_LEAGUE_PROFILE_STAT_CHIPS
+      : statSuggestions.slice(0, 8);
+  const selectedClubLabel =
+    resolvedFormValues.resolvedClub || form.currentTeam || "Choose a club or team";
+  const selectedCompetitionGroup =
+    resolvedFormValues.resolvedCompetition ||
+    resolvedFormValues.resolvedRegion ||
+    matchedDirectoryTeam?.region ||
+    "Auto-fills from club where available";
+  const selectedLocationLabel =
+    nearbySportsDirectory.areaLabel ||
+    joinMeta([form.suburb, form.postcode, form.state]) ||
+    "Enter postcode or suburb";
+  const inferredPathwayLabel = isJunior ? "Junior" : "Senior";
   const teamFieldLabel = getTeamFieldLabel(sportDefinition);
   const competitionFieldLabel = getCompetitionFieldLabel(sportDefinition);
   const teamVerificationLabel = matchedDirectoryTeam
@@ -15824,6 +15912,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
     setForm(createProfileFormDefaults(selectedRole));
     setStatus("");
     setLastSavedSummary(null);
+    setAdvancedDetailsExpanded(false);
   }, [selectedRole]);
 
   function normalizeAvailabilityForAgeCategory(availability, shouldBeJunior) {
@@ -15932,6 +16021,8 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
 
   function updateSport(value) {
     const nextSport = findSportDefinition(value);
+    const nextDirectoryPositions = getDirectoryPositionsForSport(value);
+    const nextHighlightTypes = getDirectoryHighlightTypesForSport(value);
 
     if (!nextSport) {
       setForm((current) => ({
@@ -15954,7 +16045,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
         competition: "",
         mainCompetition: "",
         customCompetitionGroup: "",
-        highlightType: "Match highlight",
+        highlightType: nextHighlightTypes[0] || "Match highlight",
         customHighlightType: "",
       }));
       return;
@@ -15965,7 +16056,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
       sportCategory: nextSport.category,
       sportId: nextSport.id,
       sport: nextSport.name,
-      position: getPositionOptionsForSport(nextSport).includes(current.position)
+      position: nextDirectoryPositions.includes(current.position)
         ? current.position
         : "",
       customPosition: "",
@@ -15983,7 +16074,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
       competition: "",
       mainCompetition: "",
       customCompetitionGroup: "",
-      highlightType: "Match highlight",
+      highlightType: nextHighlightTypes[0] || "Match highlight",
       customHighlightType: "",
     }));
   }
@@ -16044,7 +16135,6 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
       const currentSport =
         findSportDefinition(current.sportId || current.sport) || getDefaultSportDefinition();
       if (
-        isStructuredNswRugbyLeagueMode(currentSport, current.state) &&
         (value === NSW_RUGBY_LEAGUE_CUSTOM_CLUB_VALUE ||
           value === AUSTRALIAN_CUSTOM_CLUB_VALUE)
       ) {
@@ -16145,6 +16235,26 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
     }));
   }
 
+  function appendAdvancedNote(field, label) {
+    setForm((current) => {
+      const existing = String(current[field] || "").trimEnd();
+      const noteLine = `${label}: `;
+
+      if (
+        existing
+          .split("\n")
+          .some((line) => line.trim().toLowerCase().startsWith(label.toLowerCase()))
+      ) {
+        return current;
+      }
+
+      return {
+        ...current,
+        [field]: existing ? `${existing}\n${noteLine}` : noteLine,
+      };
+    });
+  }
+
   async function submitForm(mode) {
     const saved = await onSaveProfile(form, mode);
     if (saved?.success) {
@@ -16176,22 +16286,23 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
     <section className="page-stack">
       <SectionHeading
         eyebrow="Profile builder"
-        title="Create or refine your sports resume"
-        description="Build a proper athlete resume with identity, pathway context, playing history, stats, highlights, references, and safe contact settings."
+        title="Create a quick junior sports profile"
+        description="Start with the basics: athlete name, postcode, sport, club, age group, and position. Stats, achievements, and extra resume detail can be added later."
       />
 
       <div className="create-profile-grid">
         <article className="surface-card create-profile-form-card">
           <div className="builder-topline">
             <div>
-              <p className="card-kicker">Resume progress</p>
-              <h3>{builderProgress}% complete</h3>
+              <p className="card-kicker">Quick profile setup</p>
+              <h3>Start with the basics</h3>
               <p className="card-body">
-                {builderCompletionLabel}. Complete the sections below to strengthen the public resume and recruiting context.
+                Parents and athletes can save a clean first profile now, then build out stats,
+                achievements, and highlights later.
               </p>
             </div>
             <div className="builder-progress-panel">
-              <span>{builderCompletionLabel}</span>
+              <span>{builderCompletionLabel} resume depth</span>
               <div
                 className="completion-track"
                 role="progressbar"
@@ -16207,23 +16318,76 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
             </div>
           </div>
 
+          <div className="quick-profile-step-grid" aria-label="Quick profile setup steps">
+            {QUICK_PROFILE_SETUP_STEPS.map((step, index) => (
+              <div className="quick-profile-step" key={step}>
+                <span>Step {index + 1}</span>
+                <strong>{step}</strong>
+              </div>
+            ))}
+          </div>
+
+          <article className="form-section-card basic-profile-summary-card">
+            <div className="form-section-header">
+              <div>
+                <p className="card-kicker">Basic profile summary</p>
+                <h3>You have already answered the key questions</h3>
+              </div>
+              <p className="request-note">
+                Optional resume extras below should add new detail, not repeat these basics.
+              </p>
+            </div>
+            <div className="detail-list summary-detail-grid">
+              <DetailRow label="Athlete" value={form.displayName || "Add athlete name"} />
+              <DetailRow label="Sport" value={selectedSportName || "Choose sport"} />
+              <DetailRow label="Postcode / suburb" value={selectedLocationLabel} />
+              <DetailRow label="Club / team" value={selectedClubLabel} />
+              <DetailRow
+                label="Age group"
+                value={resolvedFormValues.resolvedAgeGroup || "Choose age group"}
+              />
+              <DetailRow
+                label="Position"
+                value={resolvedFormValues.resolvedPosition || "Choose position"}
+              />
+              <DetailRow label="Pathway" value={`${inferredPathwayLabel} - inferred from age group`} />
+            </div>
+          </article>
+
           <article className="form-section-card">
             <div className="form-section-header">
               <div>
-                <p className="card-kicker">Section 1</p>
-                <h3>Basic identity</h3>
+                <p className="card-kicker">Quick Profile Setup</p>
+                <h3>Start with the basics</h3>
               </div>
               <p className="request-note">
-                Start with the identity and pathway details clubs need to understand immediately.
+                This is the fast setup path. You can add stats, awards, school sport,
+                academy history, and highlights after the profile is created.
               </p>
             </div>
             <div className="detail-grid">
+              <div className="detail-grid-full quick-step-divider">
+                <span>Step 1</span>
+                <strong>Who is the athlete?</strong>
+              </div>
               <FormField
                 label="Display name"
                 value={form.displayName}
                 onChange={(value) => updateField("displayName", value)}
                 helper="Use the public name you want shown on the resume."
               />
+              <label className="form-field">
+                <span>Short about me (optional)</span>
+                <textarea
+                  rows="3"
+                  value={form.profileSummary}
+                  onChange={(event) => updateField("profileSummary", event.target.value)}
+                  placeholder="Example: I love playing hooker, defending hard, and learning from my coaches."
+                />
+                <p className="field-helper">
+                  One simple note is enough. You can skip this now and add it later.
+                </p>
+              </label>
               <FormField
                 label="State"
                 select
@@ -16247,10 +16411,14 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                 placeholder="Example: South Grafton"
                 helper="Use this if postcode is not handy."
               />
+              <div className="detail-grid-full quick-step-divider">
+                <span>Step 2</span>
+                <strong>Where do they play?</strong>
+              </div>
               <div className="detail-grid-full structured-selector-card family-flow-card postcode-directory-panel">
                 <div className="form-section-header compact-form-header">
                   <div>
-                    <p className="card-kicker">Step 1</p>
+                    <p className="card-kicker">Local finder</p>
                     <h4>Find local clubs by postcode</h4>
                   </div>
                   <p className="request-note">
@@ -16302,7 +16470,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
               <div className="detail-grid-full structured-selector-card family-flow-card">
                 <div className="form-section-header compact-form-header">
                   <div>
-                    <p className="card-kicker">Step 2</p>
+                    <p className="card-kicker">Club picker</p>
                     <h4>Choose a suggested club</h4>
                   </div>
                   <p className="request-note">
@@ -16342,18 +16510,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                         : "club-suggestion-button"
                     }
                     onClick={() => {
-                      if (usesStructuredRugbyLeagueForm) {
-                        updateTeamClub(AUSTRALIAN_CUSTOM_CLUB_VALUE);
-                        return;
-                      }
-                      setForm((current) => ({
-                        ...current,
-                        club: "",
-                        currentTeam: "",
-                        teamDirectoryId: "",
-                        clubEntryType: "custom_unverified",
-                        isVerifiedClubEntry: false,
-                      }));
+                      updateTeamClub(AUSTRALIAN_CUSTOM_CLUB_VALUE);
                     }}
                     type="button"
                   >
@@ -16383,14 +16540,10 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                   />
                 </div>
               </div>
-              <FormField
-                label="Junior or 18+"
-                select
-                value={form.ageCategory}
-                options={["Junior", "Senior"]}
-                onChange={updateAgeCategory}
-                helper="This controls the safe contact route. Juniors route to a parent or guardian."
-              />
+              <div className="detail-grid-full quick-step-divider">
+                <span>Step 3</span>
+                <strong>Choose age group and position</strong>
+              </div>
               <FormField
                 label={usesStructuredRugbyLeagueForm ? "Team / age group" : "Age group"}
                 select
@@ -16419,10 +16572,10 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                     <div className="form-section-header compact-form-header">
                       <div>
                         <p className="card-kicker">Auto-filled club context</p>
-                        <h4>Review group and competition details</h4>
+                        <h4>Group and competition summary</h4>
                       </div>
                       <p className="request-note">
-                        {NSW_RUGBY_LEAGUE_DIRECTORY_LABEL} This section can auto-fill from the club suggestion above.
+                        {NSW_RUGBY_LEAGUE_DIRECTORY_LABEL} This comes from the club or postcode context above.
                       </p>
                     </div>
                     <div className="badge-row">
@@ -16430,25 +16583,10 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                       <span className="badge">Rugby League</span>
                       <span className="badge">Custom fallback available</span>
                     </div>
-                    <div className="detail-grid">
-                      <FormField
-                        label="Group / region"
-                        select
-                        value={form.region}
-                        options={structuredGroupOptions}
-                        placeholderOption="Select group or region"
-                        onChange={updateStructuredGroupRegion}
-                        helper="This can auto-fill from the club suggestion. Only adjust it if the starter directory needs correcting."
-                      />
-                      <FormField
-                        label="Club"
-                        select
-                        value={form.club}
-                        options={structuredClubOptions}
-                        placeholderOption="Select club"
-                        onChange={updateTeamClub}
-                        helper="Suggested clubs above are the easiest path. This dropdown remains for Group 2 and other NSW Rugby League regions."
-                      />
+                    <div className="detail-list compact-detail-list">
+                      <DetailRow label="Club / team" value={selectedClubLabel} />
+                      <DetailRow label="Group / region" value={resolvedFormValues.resolvedRegion || selectedLocationLabel} />
+                      <DetailRow label="Competition / group" value={selectedCompetitionGroup} />
                       {showCustomGroupField ? (
                         <FormField
                           label="Custom group / region"
@@ -16513,66 +16651,88 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                 </>
               ) : (
                 <>
-                  <FormField
-                    label="Region"
-                    value={form.region}
-                    onChange={(value) => updateField("region", value)}
-                    placeholder="Regional NSW, Country Victoria"
-                    helper="Keep it broad for privacy and recruiting relevance."
-                  />
-                  <FormField
+                  <ChoiceChipGroup
+                    helper="Tap the role that best fits this athlete. Use Other only when the starter list needs expanding."
                     label="Position / role"
-                    value={form.position}
                     onChange={(value) => updateField("position", value)}
-                    listId={`position-options-${sportDefinition.id}`}
-                    listOptions={positionOptions}
-                    placeholder="Search or select a role"
-                    helper="Position suggestions update automatically for the selected sport."
+                    options={positionOptions}
+                    value={form.position}
                   />
-                  <FormField
+                  {showCustomPositionField ? (
+                    <FormField
+                      label="Custom position / role"
+                      value={form.customPosition}
+                      onChange={(value) => updateField("customPosition", value)}
+                      placeholder="Enter custom role"
+                      helper="This will be saved as a manual role until the sport preset is expanded."
+                    />
+                  ) : null}
+                  <ChoiceChipGroup
+                    helper="Optional. Add a secondary role only if it helps clubs understand the athlete quickly."
                     label="Secondary position / role"
-                    value={form.secondaryPosition}
                     onChange={(value) => updateField("secondaryPosition", value)}
-                    listId={`secondary-position-options-${sportDefinition.id}`}
-                    listOptions={secondaryPositionOptions}
-                    placeholder="Optional secondary role"
-                    helper="Optional, but helpful for athletes who play more than one role."
+                    options={secondaryPositionOptions}
+                    value={form.secondaryPosition}
                   />
-                  <FormField
-                    label={teamFieldLabel}
-                    value={form.club}
-                    onChange={updateTeamClub}
-                    listId={`team-directory-${sportDefinition.id}`}
-                    listOptions={directoryTeams.map((item) => item.name)}
-                    placeholder={`Search starter directory or type a custom ${teamFieldLabel.toLowerCase()}`}
-                    helper="The starter directory is seeded locally. Custom team, club, program, or squad entries are allowed."
-                  />
+                  {showCustomSecondaryPositionField ? (
+                    <FormField
+                      label="Custom secondary role"
+                      value={form.customSecondaryPosition}
+                      onChange={(value) => updateField("customSecondaryPosition", value)}
+                      placeholder="Enter secondary role"
+                      helper="Optional manual role saved safely with the profile."
+                    />
+                  ) : null}
+                  {showCustomClubField ? (
+                    <FormField
+                      label="Club / team name"
+                      value={form.customClubName}
+                      onChange={updateCustomClubName}
+                      placeholder="Enter your club or team name"
+                      helper="This appears as Added manually - pending verification, so families are never blocked by the starter directory."
+                    />
+                  ) : null}
                 </>
               )}
-              <FormField
-                label="Competition level"
-                select
-                value={form.competitionLevel}
-                options={competitionLevelOptions}
-                placeholderOption="Select competition level"
-                onChange={(value) => updateField("competitionLevel", value)}
-                helper={
-                  usesStructuredRugbyLeagueForm
-                    ? "Competition level is prefilled from the selected NSW Rugby League pathway, but you can still adjust it."
-                    : "This helps scouts filter by stage, from school and local club through senior and pro pathways."
-                }
-              />
+              {isJunior ? (
+                <p className="banner banner-warning detail-grid-full">
+                  Junior profiles stay approval-gated. Parents or guardians stay in control,
+                  and the platform uses contact requests only with no direct messaging.
+                </p>
+              ) : null}
             </div>
           </article>
 
-          <article className="form-section-card">
+          <article className="form-section-card advanced-resume-toggle-card">
+            <div className="form-section-header advanced-toggle-header">
+              <div>
+                <p className="card-kicker">Optional</p>
+                <h3>Optional resume extras</h3>
+              </div>
+              <button
+                className="button button-secondary"
+                onClick={() => setAdvancedDetailsExpanded((current) => !current)}
+                type="button"
+              >
+                {advancedDetailsExpanded ? "Hide optional extras" : "Add more detail later"}
+              </button>
+            </div>
+            <p className="card-body">
+              You can skip these. They help serious athletes add more detail later,
+              without re-asking the club, sport, age group, or position already chosen above.
+            </p>
+          </article>
+
+          {advancedDetailsExpanded ? (
+            <div className="advanced-resume-details">
+              <article className="form-section-card">
             <div className="form-section-header">
               <div>
-                <p className="card-kicker">Section 2</p>
+                <p className="card-kicker">Optional detail</p>
                 <h3>Physical and athlete details</h3>
               </div>
               <p className="request-note">
-                Optional only. Keep the details useful and age-appropriate, especially for junior athletes.
+                Optional. Only add details that are useful and comfortable to share.
               </p>
             </div>
             <div className="detail-grid">
@@ -16636,52 +16796,37 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
           <article className="form-section-card">
             <div className="form-section-header">
               <div>
-                <p className="card-kicker">Section 3</p>
+                <p className="card-kicker">Optional detail</p>
                 <h3>Playing history</h3>
               </div>
               <p className="request-note">
-                Give clubs enough team, competition, representative, school, and academy context to place the athlete correctly.
+                Current club, sport, pathway, and position come from quick setup. Add only extra history here.
               </p>
             </div>
+            <article className="surface-card nested-card inline-info-card profile-context-summary-card">
+              <p className="card-kicker">Auto-filled from quick setup</p>
+              <div className="detail-list">
+                <DetailRow label="Current club" value={selectedClubLabel} />
+                <DetailRow label="Competition / group" value={selectedCompetitionGroup} />
+                <DetailRow
+                  label="Main position"
+                  value={resolvedFormValues.resolvedPosition || "Choose in quick setup"}
+                />
+                <DetailRow label="Pathway" value={`${inferredPathwayLabel} - inferred from age group`} />
+              </div>
+              <p className="request-note">
+                To change these, update the basic setup above. Use the fields below only for history or exceptions.
+              </p>
+            </article>
             <div className="detail-grid">
               <FormField
-                label={`Current ${teamFieldLabel.toLowerCase()}`}
-                value={form.currentTeam}
-                onChange={(value) => updateField("currentTeam", value)}
-                placeholder={
-                  resolvedFormValues.resolvedClub || `Current ${teamFieldLabel.toLowerCase()}`
-                }
-                helper={
-                  usesStructuredRugbyLeagueForm
-                    ? "This usually follows the selected NSW Rugby League club. Only change it if the athlete is in a different squad or development team."
-                    : "This can match the directory-backed team above or be refined for the athlete's current squad or program."
-                }
-              />
-              {usesStructuredRugbyLeagueForm && !showCustomCompetitionField ? (
-                <FormField
-                  label={competitionFieldLabel}
-                  select
-                  value={form.mainCompetition}
-                  options={structuredCompetitionOptions}
-                  placeholderOption="Select competition / group"
-                  onChange={updateMainCompetition}
-                  helper="Competition options follow the selected NSW Rugby League group or club so families do not have to type them."
-                />
-              ) : (
-                <FormField
-                  label={competitionFieldLabel}
-                  value={form.mainCompetition}
-                  onChange={updateMainCompetition}
-                  placeholder="League, academy, meet, or tournament"
-                  helper="Use the main competition, squad, pathway, carnival, or meet."
-                />
-              )}
-              <FormField
                 label="Years played"
+                select
                 value={form.yearsPlayed}
+                options={PROFILE_YEARS_PLAYED_OPTIONS}
+                placeholderOption="Optional - choose experience"
                 onChange={(value) => updateField("yearsPlayed", value)}
-                placeholder="3 seasons, 6 years, 2021-present"
-                helper="This helps a scout place the athlete's experience quickly."
+                helper="Skip this if you are not sure. It can be added later."
               />
             </div>
             <div className="detail-grid">
@@ -16728,21 +16873,30 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
             </div>
           </article>
 
-          {isJunior ? (
-            <p className="banner banner-warning">
-              Parent or guardian approval is required before junior visibility can expand.
-            </p>
-          ) : null}
-
           <article className="form-section-card">
             <div className="form-section-header">
               <div>
-                <p className="card-kicker">Section 4</p>
+                <p className="card-kicker">Optional detail</p>
                 <h3>Achievements</h3>
               </div>
               <p className="request-note">
-                Structured achievements help the resume read like a real athlete portfolio instead of a simple profile.
+                Optional. Tap a starter chip, then add one short note if you want.
               </p>
+            </div>
+            <div className="quick-suggestion-panel detail-grid-full">
+              <p className="card-kicker">Achievement starters</p>
+              <div className="quick-suggestion-grid">
+                {PROFILE_ACHIEVEMENT_QUICK_CHIPS.map((item) => (
+                  <button
+                    className="quick-suggestion-button"
+                    key={`${item.field}-${item.label}`}
+                    onClick={() => appendAdvancedNote(item.field, item.label)}
+                    type="button"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="detail-grid">
               <label className="form-field">
@@ -16821,23 +16975,31 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
           <article className="form-section-card">
             <div className="form-section-header">
               <div>
-                <p className="card-kicker">Section 5</p>
+                <p className="card-kicker">Optional detail</p>
                 <h3>Stats</h3>
               </div>
               <p className="request-note">
-                Use sport-aware stat suggestions when helpful, then add any custom stats that matter for this athlete.
+                Optional. Tap a starter stat and add a value later, or skip stats for first setup.
               </p>
             </div>
-            <div className="badge-row helper-chip-row">
-              {statSuggestions.length > 0
-                ? statSuggestions.map((item) => (
-                    <span className="badge" key={item}>
+            <div className="quick-suggestion-panel">
+              <p className="card-kicker">Stat starters</p>
+              <div className="quick-suggestion-grid">
+                {quickStatChips.length > 0 ? (
+                  quickStatChips.map((item) => (
+                    <button
+                      className="quick-suggestion-button"
+                      key={item}
+                      onClick={() => appendAdvancedNote("stats", item)}
+                      type="button"
+                    >
                       {item}
-                    </span>
+                    </button>
                   ))
-                : (
+                ) : (
                   <span className="badge">Custom stat entries supported</span>
                 )}
+              </div>
             </div>
             <label className="form-field">
               <span>Sport-aware stats</span>
@@ -16856,91 +17018,27 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
           <article className="form-section-card">
             <div className="form-section-header">
               <div>
-                <p className="card-kicker">Section 6</p>
-                <h3>Highlights</h3>
+                <p className="card-kicker">Optional detail</p>
+                <h3>Add first highlight later</h3>
               </div>
               <p className="request-note">
-                Add a clean local highlight placeholder so the profile reads like a real resume, not a blank shell.
+                Highlights are not required to create a profile. Save the profile first, then use Highlight Manager when you are ready.
               </p>
             </div>
-            <div className="detail-grid">
-              <FormField
-                label="Highlight title"
-                value={form.highlightTitle}
-                onChange={(value) => updateField("highlightTitle", value)}
-                placeholder="Dominant carry sequence, centre bounce work, state qualifying split"
-                helper="The first saved highlight becomes the featured local resume clip."
-              />
-              {usesStructuredRugbyLeagueForm ? (
-                <ChoiceChipGroup
-                  helper="Choose the Rugby League highlight type instead of typing it. Custom input only appears when you pick Other."
-                  label="Highlight type / tag"
-                  onChange={(value) => updateField("highlightType", value)}
-                  options={profileHighlightOptions}
-                  value={form.highlightType}
-                />
-              ) : (
-                <FormField
-                  label="Highlight type / tag"
-                  select
-                  value={form.highlightType}
-                  options={profileHighlightOptions}
-                  onChange={(value) => updateField("highlightType", value)}
-                  helper="Keep the label simple and professional."
-                />
-              )}
-              {showCustomHighlightTypeField ? (
-                <FormField
-                  label="Custom highlight type"
-                  value={form.customHighlightType}
-                  onChange={(value) => updateField("customHighlightType", value)}
-                  placeholder="Enter custom highlight label"
-                  helper="Only use this when the starter Rugby League highlight list does not fit."
-                />
-              ) : null}
-              <FormField
-                label="Match / event"
-                value={form.highlightEvent}
-                onChange={(value) => updateField("highlightEvent", value)}
-                placeholder="Round 8 v Woden, Riverina carnival, state age meet"
-                helper="Optional event context makes the highlight feel more credible."
-              />
-              <label className="form-field">
-                <span>Date</span>
-                <input
-                  type="date"
-                  value={form.highlightDate}
-                  onChange={(event) => updateField("highlightDate", event.target.value)}
-                />
-                <p className="field-helper">Optional. Useful when the clip is tied to a known fixture or meet.</p>
-              </label>
-              <FormField
-                label="Video URL placeholder"
-                value={form.highlightVideoUrl}
-                onChange={(value) => updateField("highlightVideoUrl", value)}
-                placeholder="https://example.com/video"
-                helper="Private profile photos and thumbnail uploads can come from account and highlight tools. Video upload is not enabled yet."
-              />
-              <FormField
-                label="Verification status"
-                select
-                value={form.highlightVerificationStatus}
-                options={[
-                  isJunior ? "Parent approval needed" : "Pending review",
-                  "Pending verification",
-                  "Coach verified",
-                  "Admin reviewed",
-                ]}
-                onChange={(value) => updateField("highlightVerificationStatus", value)}
-                helper="The highlight still stays inside the existing safe review workflow."
-              />
+            <div className="cta-row">
+              <Link className="button button-secondary" to="/highlight-manager">
+                Go to Highlight Manager
+              </Link>
+              <span className="request-note">
+                Add highlight type, thumbnail, video, and match details in the dedicated Highlight Manager.
+              </span>
             </div>
           </article>
 
           <article className="form-section-card">
             <div className="form-section-header">
               <div>
-                <p className="card-kicker">Section 7</p>
+                <p className="card-kicker">Optional detail</p>
                 <h3>References and verification</h3>
               </div>
               <p className="request-note">
@@ -16989,7 +17087,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
           <article className="form-section-card">
             <div className="form-section-header">
               <div>
-                <p className="card-kicker">Section 8</p>
+                <p className="card-kicker">Optional detail</p>
                 <h3>Availability</h3>
               </div>
               <p className="request-note">
@@ -17077,13 +17175,15 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
               </article>
             </div>
           </article>
+            </div>
+          ) : null}
 
           <div className="cta-row">
             <button className="button button-subtle" onClick={() => submitForm("draft")} type="button">
               Save Draft
             </button>
             <button className="button button-primary" onClick={() => submitForm("submit")} type="button">
-              Submit for Verification
+              Save Profile
             </button>
           </div>
 
@@ -17258,20 +17358,23 @@ function HighlightManagerPage({
   const selectedAthleteSportDefinition =
     findSportDefinition(selectedAthlete?.sportId || selectedAthlete?.sport) ||
     getDefaultSportDefinition();
-  const usesStructuredHighlightTypes = Boolean(
-    selectedAthleteSportDefinition?.id === "rugby-league",
+  const highlightTypeOptions = getDirectoryHighlightTypesForSport(
+    selectedAthlete?.sport || selectedAthleteSportDefinition?.name || "Other",
   );
+  const usesStructuredHighlightTypes = highlightTypeOptions.length > 0;
   const editingHighlight = editingId
     ? highlights.find((item) => item.id === editingId) || null
     : null;
-  const suggestedTags = getHighlightTagSuggestions(selectedAthlete?.sportId || "");
+  const suggestedTags = highlightTypeOptions.filter((item) => item !== NSW_RUGBY_LEAGUE_OTHER_OPTION);
   const highlightTypeSelectionValue = usesStructuredHighlightTypes
     ? getHighlightTypeSelectionValue(form.highlightType, selectedAthleteSportDefinition.id)
     : form.highlightType;
   const showCustomManagedHighlightTypeField =
-    usesStructuredHighlightTypes && form.highlightType === NSW_RUGBY_LEAGUE_OTHER_OPTION;
+    form.highlightType === NSW_RUGBY_LEAGUE_OTHER_OPTION;
   const positionPlayedSuggestionOptions = usesStructuredHighlightTypes
-    ? NSW_RUGBY_LEAGUE_POSITION_OPTIONS.filter((item) => item !== NSW_RUGBY_LEAGUE_OTHER_OPTION)
+    ? getDirectoryPositionsForSport(selectedAthlete?.sport || selectedAthleteSportDefinition?.name).filter(
+        (item) => item !== NSW_RUGBY_LEAGUE_OTHER_OPTION,
+      )
     : getPositionOptionsForSport(selectedAthleteSportDefinition);
   const athleteHighlights = selectedAthlete
     ? getHighlightsForAthlete(highlights, selectedAthlete.id)
@@ -17365,14 +17468,15 @@ function HighlightManagerPage({
       : HIGHLIGHT_SHOWCASE_OPTIONS;
 
   function getEmptyForm(athlete, athleteId = athlete?.id || "") {
-    const sportTags = getHighlightTagSuggestions(athlete?.sportId || "");
-    const usesStructuredRugbyLeagueHighlightTypes = athlete?.sportId === "rugby-league";
+    const sportTags = getDirectoryHighlightTypesForSport(athlete?.sport || athlete?.sportId || "Other").filter(
+      (item) => item !== NSW_RUGBY_LEAGUE_OTHER_OPTION,
+    );
     return {
       id: "",
       athleteId,
       title: "",
       sport: athlete?.sport || "",
-      highlightType: usesStructuredRugbyLeagueHighlightTypes ? "" : sportTags[0] || "",
+      highlightType: sportTags[0] || "",
       customHighlightType: "",
       matchType: "",
       matchEvent: "",
@@ -18441,32 +18545,20 @@ function HighlightManagerPage({
                 <span className="badge">No public media URL</span>
               </div>
             </div>
-            {usesStructuredHighlightTypes ? (
-              <ChoiceChipGroup
-                helper="Rugby League highlight types are click-based here so kids and parents do not need to type them. Use Other only when needed."
-                label="What happened in the clip?"
-                onChange={(value) => updateField("highlightType", value)}
-                options={NSW_RUGBY_LEAGUE_HIGHLIGHT_TYPE_OPTIONS}
-                value={highlightTypeSelectionValue}
-              />
-            ) : (
-              <FormField
-                label="Highlight type / tag"
-                value={form.highlightType}
-                onChange={(value) => updateField("highlightType", value)}
-                placeholder="Try, Mark, Assist, Race, Personal best"
-                listId={`highlight-tags-${selectedAthlete?.sportId || "all"}`}
-                listOptions={suggestedTags}
-                helper="Suggested tags update from the selected sport, and custom tags are also allowed."
-              />
-            )}
+            <ChoiceChipGroup
+              helper="Sport-specific highlight types are click-based so kids and parents do not need to type them. Use Other only when needed."
+              label="What happened in the clip?"
+              onChange={(value) => updateField("highlightType", value)}
+              options={highlightTypeOptions}
+              value={highlightTypeSelectionValue}
+            />
             {showCustomManagedHighlightTypeField ? (
               <FormField
                 label="Custom highlight type"
                 value={form.customHighlightType}
                 onChange={(value) => updateField("customHighlightType", value)}
                 placeholder="Enter custom highlight type"
-                helper="Only use this if the Rugby League starter highlight list does not fit."
+                helper="Only use this if the starter highlight list does not fit."
               />
             ) : null}
               <FormField
@@ -19434,7 +19526,12 @@ function ScoutSearchPage({
   const sportOptions = ["All", ...new Set([...scoutNearbyDirectory.sports, ...getSimpleSportOptions()])];
   const ageOptions = usesStructuredScoutFilters
     ? ["All", ...NSW_RUGBY_LEAGUE_FILTER_AGE_GROUP_OPTIONS]
-    : ["All", ...NSW_RUGBY_LEAGUE_FILTER_AGE_GROUP_OPTIONS];
+    : [
+        "All",
+        ...(filters.sport !== "All"
+          ? getDirectoryAgeGroupsForSport(filters.sport)
+          : AUSTRALIAN_AGE_GROUPS),
+      ];
   const positionOptions = usesStructuredScoutFilters
     ? ["All", ...NSW_RUGBY_LEAGUE_POSITION_OPTIONS]
     : filters.sport !== "All"
@@ -21471,6 +21568,18 @@ function NotFoundPage() {
         </Link>
       </article>
     </section>
+  );
+}
+
+function BrandLogoBadge({ compact = false }) {
+  return (
+    <div className={compact ? "brand-logo-badge compact" : "brand-logo-badge"}>
+      <img src={mySportsResumeApprovedLogo} alt="My Sports Resume logo" />
+      <div>
+        <p className="card-kicker">My Sports Resume</p>
+        <h4>Profile. Highlights. Opportunity.</h4>
+      </div>
+    </div>
   );
 }
 

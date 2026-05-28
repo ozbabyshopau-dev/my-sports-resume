@@ -5,6 +5,8 @@
 - My Sports Resume is a visual-polished V1 sports resume platform demo.
 - The homepage structure is locked in the approved dark/gold laptop-first direction.
 - Inner pages are polished and aligned to the same premium visual system.
+- The selected black/gold multi-sport hero/banner image is now wired into the homepage hero as the preferred marketing asset.
+- The approved standalone My Sports Resume logo PNG is now wired into the header, homepage brand mark, and auth/account logo badge areas. The previous repo-native SVG placeholder and temporary visible MSR monogram are no longer used in the UI.
 - Supabase Auth Phase 1 is working for real account sign up, login, logout, session detection, and lightweight role sync.
 - Athlete Profiles Phase 1 is working behind a guarded Supabase profile data service.
 - Highlights Metadata Phase 1 is working behind a guarded Supabase highlight data service.
@@ -23,12 +25,14 @@
 - NSW Rugby League users can now mostly click through group or region, club, age group, position, secondary position, and Rugby League highlight types instead of typing them manually.
 - Rugby League age groups are now standardised from `Under 6` through `Under 18`, with senior footy options beginning after that for `Under 19`, `Under 21`, `Open`, `Reserve Grade`, `First Grade`, `Ladies League Tag`, `Girls League Tag`, `Women's Tackle`, and `Masters`.
 - Highlight Manager now keeps Rugby League highlight creation click-based, lets kids and parents save a clip without typing long match notes, auto-generates a clean title when needed, and collapses match details under an optional section.
-- The main family-facing sport flow now uses `Sport -> Postcode/Suburb -> Nearby Clubs/Teams -> Age Group -> Position` instead of making sport category the primary choice.
-- A simple starter sports list is now used for the main profile/search/opportunity paths: Rugby League, Rugby Union, AFL, Soccer, Netball, Basketball, Cricket, Touch Football, Oztag, Athletics, Swimming, Boxing, Martial Arts, Tennis, Hockey, Golf, and Other.
-- A starter `australianSportsClubDirectory` seed now supports postcode/suburb club suggestions, beginning with NSW Rugby League Group 2 clubs including South Grafton Rebels, Grafton Ghosts, Coffs Harbour Comets, Sawtell Panthers, Woolgoolga Seahorses, Nambucca Heads Roosters, Macksville Sea Eagles, Bowraville Tigers, Kempsey Dragons, and Smithtown Tigers.
+- The main family-facing sport flow now uses `Postcode/Suburb -> Sport -> Nearby Clubs/Teams -> Age Group -> Position` instead of making sport category the primary choice.
+- A simple starter sports list is now used for the main profile/search/opportunity paths: Rugby League, Rugby Union, AFL, Soccer, Netball, Basketball, Cricket, Touch Football, Oztag, Athletics, Swimming, Boxing, Martial Arts, Tennis, Hockey, Golf, Baseball, Softball, Volleyball, Rowing, Surf Life Saving, and Other.
+- A starter `australianSportsClubDirectory` seed now supports postcode/suburb club suggestions across main Australian sports, beginning with a multi-sport 2460 / Grafton / South Grafton / Clarence Valley starter directory.
+- The 2460 starter directory includes clean Rugby League entries for South Grafton Rebels and Grafton Ghosts, retains Group 2 Rugby League clubs including Coffs Harbour Comets, Sawtell Panthers, Woolgoolga Seahorses, Nambucca Heads Roosters, Macksville Sea Eagles, Bowraville Tigers, Kempsey Dragons, and Smithtown Tigers, and adds placeholder `starter_seed_needs_verification` pathways for Netball, Soccer, Basketball, Cricket, Rugby Union, Touch Football, Oztag, Athletics, Swimming, Boxing, Martial Arts, AFL, Tennis, Hockey, Golf, Baseball, Softball, Volleyball, Rowing, and Surf Life Saving.
+- Sport-specific position/role presets and highlight type chips are now available for the main sport list, so Highlight Manager is no longer Rugby League-only for click-based highlight creation.
 - Sport categories are demoted to internal catalogue metadata and are no longer the main visible Create Profile, Scout Search, or Opportunities filter flow.
-- The NSW Rugby League directory remains starter and expandable, not a complete official national club database yet.
-- A custom unverified fallback remains available when a club or competition is not listed, so kids and parents are not blocked by the starter directory.
+- The postcode sports directory remains starter and expandable, not a complete official national club database yet.
+- A custom unverified fallback remains available when a club or competition is not listed, so kids and parents are not blocked by the starter directory. Visible UI uses `Added manually - pending verification` instead of exposing internal `custom_unverified` wording.
 
 ## Current folder path
 
