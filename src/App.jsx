@@ -209,9 +209,24 @@ const DEFAULT_PLAYING_HISTORY = {
 
 const QUICK_PROFILE_SETUP_STEPS = [
   "Who is the athlete?",
-  "Where do they play?",
+  "Choose sport and location",
   "Age and position",
   "Save profile",
+];
+
+const SPORT_FIRST_PATHWAY_OPTIONS = [
+  "Rugby League",
+  "Soccer",
+  "Netball",
+  "Basketball",
+  "AFL",
+  "Cricket",
+  "Rugby Union",
+  "Boxing",
+  "Athletics",
+  "Swimming",
+  "Tennis",
+  "Other",
 ];
 
 const PROFILE_YEARS_PLAYED_OPTIONS = [
@@ -599,7 +614,7 @@ const ROLE_DEFINITIONS = {
   },
   admin: {
     id: "admin",
-    label: "Admin / demo reviewer",
+    label: "Admin reviewer",
     eyebrow: "Trust and review console",
     description: "Review pending profiles, highlights, and verification requests.",
     nextPath: "/my-profile",
@@ -12935,6 +12950,10 @@ function HomePage({
         </article>
       </section>
 
+      <SportPathwayStrip
+        description="Choose your sport, build your sports resume, and find clubs near your postcode."
+      />
+
       <section className="surface-card concept-trust-strip">
         {trustPillars.map((item) => (
           <article className="concept-trust-item" key={item.title}>
@@ -15006,8 +15025,8 @@ function OpportunitiesBoardPage({
     <section className="page-stack">
       <SectionHeading
         eyebrow="Opportunities"
-        title="Opportunities built for safe sports discovery."
-        description="A structured opportunities board for serious recruitment, trials, pathways, and signings without social clutter or direct messaging."
+        title="Discover opportunities by sport and postcode"
+        description="Choose a sport, search nearby clubs or organisations, and request contact safely."
       />
 
       <div className="dashboard-stat-grid">
@@ -15026,7 +15045,7 @@ function OpportunitiesBoardPage({
         <MetricCard
           label="Pending opportunity reviews"
           value={`${pendingCount}`}
-          detail="Local demo opportunities still waiting for admin review"
+          detail="Opportunities still waiting for verification checks"
           tone="blue"
         />
         <MetricCard
@@ -15054,19 +15073,23 @@ function OpportunitiesBoardPage({
         </div>
         <p className="request-note">
           {opportunityBackendStatus?.message ||
-            "Opportunities stay structured, request-only, and free from direct messaging."}
+            "Opportunities stay structured and request-only with no direct messaging."}
         </p>
 
+        <SportPathwayStrip
+          title="Choose your sport"
+          description="Sport -> Postcode/Suburb -> Club/Organisation -> Age Group -> Opportunity Type"
+          selectedSport={filters.sport === "All" ? "" : filters.sport}
+          onSelectSport={(sport) => updateFilter("sport", sport)}
+        />
+
         <div className="search-filter-grid">
-          <label className="form-field search-query-field">
-            <span>Search organisations, roles, sports, or locations</span>
-            <input
-              type="text"
-              value={filters.query}
-              onChange={(event) => updateFilter("query", event.target.value)}
-              placeholder="Search opportunities, organisations, positions, regions"
-            />
-          </label>
+          <FilterField
+            label="Sport"
+            value={filters.sport}
+            options={sportOptions}
+            onChange={(value) => updateFilter("sport", value)}
+          />
           <label className="form-field">
             <span>Postcode or suburb</span>
             <input
@@ -15076,12 +15099,6 @@ function OpportunitiesBoardPage({
               placeholder="2460 or South Grafton"
             />
           </label>
-          <FilterField
-            label="Sport"
-            value={filters.sport}
-            options={sportOptions}
-            onChange={(value) => updateFilter("sport", value)}
-          />
           <label className="form-field">
             <span>Club / organisation</span>
             <input
@@ -15089,6 +15106,15 @@ function OpportunitiesBoardPage({
               value={filters.clubOrganisation}
               onChange={(event) => updateFilter("clubOrganisation", event.target.value)}
               placeholder="South Grafton Rebels"
+            />
+          </label>
+          <label className="form-field search-query-field">
+            <span>Search title or role (optional)</span>
+            <input
+              type="text"
+              value={filters.query}
+              onChange={(event) => updateFilter("query", event.target.value)}
+              placeholder="Search opportunities or role keywords"
             />
           </label>
           <FilterField
@@ -15203,7 +15229,7 @@ function OpportunitiesBoardPage({
               <h3>Create an opportunity</h3>
             </div>
             <p className="request-note">
-              New opportunities start with pending admin verification and use Supabase when your signed-in backend path is active.
+              New opportunities start as pending verification and use Supabase when your signed-in backend path is active.
             </p>
           </div>
           <div className="detail-grid">
@@ -15812,14 +15838,12 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
   const isJunior = form.ageCategory === "Junior";
   const sportDefinition =
     findSportDefinition(form.sportId || form.sport) || getDefaultSportDefinition();
-  const baseSportOptions = getSimpleSportOptions();
   const nearbySportsDirectory = getNearbySportsDirectory({
     postcode: form.postcode,
     suburb: form.suburb,
     state: form.state,
   });
   const localSportOptions = nearbySportsDirectory.sports;
-  const sportOptions = [...new Set([...localSportOptions, ...baseSportOptions])];
   const hasLocationSearch = Boolean(String(form.postcode || form.suburb || "").trim());
   const usesStructuredRugbyLeagueForm = isStructuredNswRugbyLeagueMode(sportDefinition, form.state);
   const selectedSportName = form.sport || sportDefinition?.name || "Other";
@@ -16397,12 +16421,23 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                 onChange={updateStateField}
                 helper="Use the athlete's main playing state."
               />
+              <div className="detail-grid-full quick-step-divider">
+                <span>Step 2</span>
+                <strong>Choose sport and location</strong>
+              </div>
+              <div className="detail-grid-full">
+                <SportPathwayStrip
+                  description="Choose your sport, then enter postcode/suburb so local clubs are easier to find."
+                  selectedSport={form.sport}
+                  onSelectSport={updateSport}
+                />
+              </div>
               <FormField
                 label="Postcode or suburb"
                 value={form.postcode}
                 onChange={(value) => updateField("postcode", value)}
                 placeholder="Example: 2460"
-                helper="Start here to find local sports and clubs without spelling club names manually."
+                helper="Find clubs near your postcode."
               />
               <FormField
                 label="Suburb if known"
@@ -16411,10 +16446,6 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                 placeholder="Example: South Grafton"
                 helper="Use this if postcode is not handy."
               />
-              <div className="detail-grid-full quick-step-divider">
-                <span>Step 2</span>
-                <strong>Where do they play?</strong>
-              </div>
               <div className="detail-grid-full structured-selector-card family-flow-card postcode-directory-panel">
                 <div className="form-section-header compact-form-header">
                   <div>
@@ -16458,15 +16489,6 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                   )}
                 </div>
               </div>
-              <FormField
-                label="Sport"
-                value={form.sport}
-                onChange={updateSport}
-                listId="sport-catalog-options"
-                listOptions={sportOptions}
-                placeholder="Select a sport from the local options"
-                helper="Choose from sports found near the postcode, or pick another sport if needed."
-              />
               <div className="detail-grid-full structured-selector-card family-flow-card">
                 <div className="form-section-header compact-form-header">
                   <div>
@@ -19707,8 +19729,8 @@ function ScoutSearchPage({
     <section className="page-stack">
       <SectionHeading
         eyebrow="Recruitment board"
-        title="Professional search and discovery"
-        description="Search, compare, and open safe contact pathways from one premium board."
+        title="Find athletes by sport and postcode"
+        description="Start with postcode/suburb, then choose sport, club, age group, and position."
       />
 
       <div className="dashboard-stat-grid">
@@ -19746,16 +19768,14 @@ function ScoutSearchPage({
           </div>
         </div>
 
+        <SportPathwayStrip
+          title="Choose your sport"
+          description="Postcode/Suburb -> Sport -> Club/Team -> Age Group -> Position"
+          selectedSport={filters.sport === "All" ? "" : filters.sport}
+          onSelectSport={(sport) => setFilter("sport", sport)}
+        />
+
         <div className="search-filter-grid">
-          <label className="form-field search-query-field">
-            <span>Search athletes, clubs, or locations</span>
-            <input
-              type="text"
-              value={filters.query}
-              onChange={(event) => setFilter("query", event.target.value)}
-              placeholder="Search player name, club, sport, location"
-            />
-          </label>
           <label className="form-field">
             <span>Postcode or suburb</span>
             <input
@@ -19768,9 +19788,18 @@ function ScoutSearchPage({
           <FilterField
             label="Sport"
             value={filters.sport}
-            options={sportOptions}
-            onChange={(value) => setFilter("sport", value)}
-          />
+              options={sportOptions}
+              onChange={(value) => setFilter("sport", value)}
+            />
+          <label className="form-field search-query-field">
+            <span>Search athlete name (optional)</span>
+            <input
+              type="text"
+              value={filters.query}
+              onChange={(event) => setFilter("query", event.target.value)}
+              placeholder="Search player name"
+            />
+          </label>
           <FilterField
             label={teamClubFilterLabel}
             value={filters.teamClub}
@@ -20232,8 +20261,8 @@ function ClubVerificationRequestPage({ onSubmitVerificationRequest, selectedRole
     <section className="page-stack">
       <SectionHeading
         eyebrow="Verification request"
-        title="Club, scout, school, and academy verification"
-        description="Submit a structured verification request that appears in the admin review queue. No real email sending is attached yet."
+        title="Submit your organisation for review"
+        description="Requests are checked before trust labels appear."
       />
 
       <div className="create-profile-grid">
@@ -20243,13 +20272,13 @@ function ClubVerificationRequestPage({ onSubmitVerificationRequest, selectedRole
               <p className="card-kicker">Verification form</p>
               <h3>Request verification</h3>
               <p className="card-body">
-                Best suited to the club, scout, coach, school, or academy path, but available anywhere in the demo.
+                Built for clubs, coaches, schools, and academies who want trusted visibility.
               </p>
             </div>
             <div className="builder-progress-panel">
               <span>{getRoleLabel(selectedRole)}</span>
               <p className="request-note">
-                Verification requests save to your Supabase account when available, otherwise this device only.
+                Your request is saved safely for review.
               </p>
             </div>
           </div>
@@ -20299,7 +20328,7 @@ function ClubVerificationRequestPage({ onSubmitVerificationRequest, selectedRole
                 placeholder="Metro, regional, district"
               />
               <FormField
-                label="Email placeholder"
+                label="Contact email"
                 value={form.email}
                 onChange={(value) => updateField("email", value)}
                 placeholder="name@example.com"
@@ -20324,8 +20353,8 @@ function ClubVerificationRequestPage({ onSubmitVerificationRequest, selectedRole
             <button className="button button-primary" onClick={submitForm} type="button">
               Submit Verification Request
             </button>
-            <Link className="button button-secondary" to="/admin">
-              Open Admin Queue
+            <Link className="button button-secondary" to="/account">
+              View Account Status
             </Link>
           </div>
 
@@ -20338,9 +20367,9 @@ function ClubVerificationRequestPage({ onSubmitVerificationRequest, selectedRole
           <h3>What happens next</h3>
           <div className="checklist">
             {[
-              "The request is written into the current admin review record flow.",
-              "No real email, identity check, or direct messaging is performed yet.",
-              "This keeps the V1 premium workflow intact while the review metadata layer moves to Supabase safely.",
+              "Your organisation request is saved and queued for review.",
+              "Trust labels appear after checks are complete.",
+              "Contact requests stay structured with no direct messaging.",
             ].map((item) => (
               <div className="check-item" key={item}>
                 <span className="check-mark done" />
@@ -21590,6 +21619,54 @@ function SectionHeading({ eyebrow, title, description }) {
       <h2>{title}</h2>
       <p className="section-description">{description}</p>
     </header>
+  );
+}
+
+function SportPathwayStrip({
+  title = "Choose your sport",
+  description = "Build your sports resume and find clubs near your postcode.",
+  sports = SPORT_FIRST_PATHWAY_OPTIONS,
+  selectedSport = "",
+  onSelectSport,
+}) {
+  const normalizedSelected = normalizeText(selectedSport);
+
+  return (
+    <article className="surface-card sport-pathway-strip">
+      <div className="sport-pathway-topline">
+        <p className="card-kicker">Sport-first pathway</p>
+        <h3>{title}</h3>
+      </div>
+      <p className="card-body">{description}</p>
+      <div className="sport-pathway-grid" role="group" aria-label={title}>
+        {sports.map((sport) => {
+          const isSelected = normalizedSelected === normalizeText(sport);
+          const className = isSelected
+            ? "sport-pathway-pill sport-pathway-pill-selected"
+            : "sport-pathway-pill";
+
+          if (typeof onSelectSport === "function") {
+            return (
+              <button
+                className={className}
+                key={sport}
+                onClick={() => onSelectSport(sport)}
+                type="button"
+              >
+                {sport}
+              </button>
+            );
+          }
+
+          return (
+            <span className={className} key={sport}>
+              {sport}
+            </span>
+          );
+        })}
+      </div>
+      <p className="request-note">Find clubs near your postcode, then keep building from there.</p>
+    </article>
   );
 }
 

@@ -6858,6 +6858,67 @@ body::after {
   outline-offset: 2px;
 }
 
+.sport-pathway-strip {
+  display: grid;
+  gap: 0.72rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(198, 166, 107, 0.2);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(198, 166, 107, 0.2), transparent 38%),
+    linear-gradient(155deg, rgba(255, 252, 246, 0.96) 0%, rgba(245, 235, 220, 0.92) 100%);
+}
+
+.sport-pathway-topline {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.sport-pathway-topline h3 {
+  margin: 0;
+  color: #2e2316;
+}
+
+.sport-pathway-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.55rem;
+}
+
+.sport-pathway-pill {
+  min-height: 42px;
+  padding: 0.68rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(76, 60, 31, 0.14);
+  background: rgba(255, 253, 248, 0.94);
+  color: #3b2d1d;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  font-family: inherit;
+}
+
+button.sport-pathway-pill {
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+button.sport-pathway-pill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(198, 166, 107, 0.38);
+  box-shadow: 0 10px 18px rgba(25, 20, 11, 0.1);
+}
+
+.sport-pathway-pill-selected {
+  border-color: rgba(198, 166, 107, 0.46);
+  background: linear-gradient(180deg, rgba(198, 166, 107, 0.2) 0%, rgba(255, 252, 246, 0.98) 100%);
+  color: #2b2013;
+}
+
 .brand-mark {
   overflow: hidden;
   width: 64px;
@@ -6971,6 +7032,34 @@ body::after {
   }
 }
 
+@media (min-width: 760px) {
+  .concept-hero-shell {
+    grid-template-columns: minmax(360px, 1.02fr) minmax(330px, 0.92fr) minmax(260px, 0.72fr) !important;
+    grid-template-areas: "visual copy preview" !important;
+    align-items: stretch;
+  }
+
+  .concept-hero-shell::before,
+  .concept-hero-shell::after {
+    display: none !important;
+  }
+
+  .hero-visual-panel {
+    grid-area: visual;
+    display: block;
+    min-height: 100%;
+  }
+
+  .hero-banner-panel {
+    min-height: clamp(320px, 34vw, 480px);
+  }
+
+  .hero-banner-panel img {
+    min-height: clamp(320px, 34vw, 480px);
+    object-position: center;
+  }
+}
+
 @media (max-width: 760px) {
   .concept-hero-shell {
     grid-template-areas:
@@ -6997,6 +7086,10 @@ body::after {
 
   .club-suggestion-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sport-pathway-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hero-shield-mark {
