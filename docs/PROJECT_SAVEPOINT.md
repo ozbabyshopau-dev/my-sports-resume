@@ -368,3 +368,14 @@ Deployment/dist note:
 
 - `.gitignore` includes `dist`, so the local recommendation remains: commit source files, let Vercel run the Vite build, and do not intentionally commit generated `dist/` output unless a future hosting setup explicitly requires it
 - this local workspace currently has no `.git` folder and `git` is not available on PATH, so historical tracked/untracked status for `dist/` cannot be proven from this machine
+
+## Future phase: Club Directory Admin
+
+Planned later, not built in this pilot pass:
+
+- add/edit postcode entries
+- add/edit sports
+- add/edit clubs
+- verify club entries
+- manage manually added pending-verification entries
+- keep public/social behaviour unchanged

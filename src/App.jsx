@@ -210,7 +210,7 @@ const DEFAULT_PLAYING_HISTORY = {
 const QUICK_PROFILE_SETUP_STEPS = [
   "Who is the athlete?",
   "Choose sport and location",
-  "Age and position",
+  "Club, age group and position",
   "Save profile",
 ];
 
@@ -228,6 +228,57 @@ const SPORT_FIRST_PATHWAY_OPTIONS = [
   "Tennis",
   "Other",
 ];
+
+const SPORT_PATHWAY_SUMMARIES = {
+  "Rugby League": {
+    description: "Find your local club by postcode, choose your age group, then build a clean player resume.",
+    pathway: "Under 6 to Under 18, then senior grades and representative pathways.",
+  },
+  Soccer: {
+    description: "Set up a football resume with your club, position, and best game moments in a few steps.",
+    pathway: "Junior age groups, school and academy pathways, then open and senior club football.",
+  },
+  Netball: {
+    description: "Show your position, club, and key playmaking or defensive highlights in one tidy profile.",
+    pathway: "Junior netball pathways through to open divisions, representative squads, and women's pathways.",
+  },
+  Basketball: {
+    description: "Build a player card with your club, role, and scoring or defensive highlight clips.",
+    pathway: "Junior reps, club basketball, academy pathways, then open and senior grades.",
+  },
+  AFL: {
+    description: "Create an AFL profile around club, role, and match-impact highlights.",
+    pathway: "Junior football, school and academy pathways, then open-age and senior club opportunities.",
+  },
+  Cricket: {
+    description: "Build a cricket resume with your club, role, and batting, bowling, or fielding highlights.",
+    pathway: "Junior grades, school and representative cricket, then open and senior club pathways.",
+  },
+  "Rugby Union": {
+    description: "Show where you play, what role you cover, and the clips that prove your game impact.",
+    pathway: "Junior rugby, school and representative pathways, then colts, grade, and senior opportunities.",
+  },
+  Boxing: {
+    description: "Create a combat-sport profile with your club, pathway, and technical or competition clips.",
+    pathway: "Junior and youth development, then open divisions and masters where relevant.",
+  },
+  Athletics: {
+    description: "Build an athletics profile with event focus, PB context, and race or technique clips.",
+    pathway: "Age-group track and field, school pathways, then open and masters competition.",
+  },
+  Swimming: {
+    description: "Show stroke focus, age pathway, and race or technique footage in a clean profile.",
+    pathway: "Junior squad pathways, school and club meets, then open and masters competition.",
+  },
+  Tennis: {
+    description: "Build a tennis resume with your program, pathway, and match or technique highlights.",
+    pathway: "Junior development, school and club events, then open and masters competition.",
+  },
+  Other: {
+    description: "Start with the sport, postcode, and club, then shape the profile with roles and highlights later.",
+    pathway: "Use the standard age pathway first, then add more detail as the sport space expands.",
+  },
+};
 
 const PROFILE_YEARS_PLAYED_OPTIONS = [
   "First season",
@@ -3406,7 +3457,7 @@ function getResumeVisibilityWarnings(profile) {
   }
 
   if (profile.profileStatus === "Pending Verification") {
-    warnings.push("Pending verification - demo preview only.");
+    warnings.push("Pending verification - preview only.");
   }
 
   return warnings;
@@ -12776,6 +12827,15 @@ function HomePage({
 }) {
   const spotlight = featuredAthlete || athletes[0] || null;
   const featuredHighlight = spotlight ? getPrimaryHighlight(highlights, spotlight.id) : null;
+  const [selectedHomepageSport, setSelectedHomepageSport] = useState("Rugby League");
+  const pilot2460Directory = getNearbySportsDirectory({ postcode: "2460", state: "NSW" });
+  const pilot2460Clubs = getClubSuggestionsByPostcode({
+    postcode: "2460",
+    sport: "Rugby League",
+  }).slice(0, 2);
+  const pilot2460Sports = pilot2460Directory.sports.slice(0, 11);
+  const pilotProfileLink =
+    "/create-profile?pilot=2460&state=NSW&postcode=2460&suburb=South%20Grafton&sport=Rugby%20League&club=South%20Grafton%20Rebels";
   const trustPillars = [
     {
       title: "Built for Safety",
@@ -12881,13 +12941,7 @@ function HomePage({
   return (
     <section className="page-stack concept-home">
       <section className="hero-stage concept-hero-stage">
-        <article className="hero-card premium-hero concept-hero-shell">
-          <div className="hero-visual-panel hero-banner-panel">
-            <img
-              alt="My Sports Resume multi-sport hero banner"
-              src={msrHeroBanner}
-            />
-          </div>
+        <article className="hero-card premium-hero concept-hero-shell concept-hero-shell-visual-first">
           <div className="hero-copy concept-hero-copy">
             <div className="hero-pretitle-row">
               <span className="hero-shield-mark" aria-hidden="true">
@@ -12902,57 +12956,164 @@ function HomePage({
               ))}
             </h2>
             <p className="hero-text">
-              My Sports Resume helps Australian athletes of all ages get discovered by clubs,
-              schools and scouts nationwide.
+              Create a sports resume, upload highlights privately, and find clubs or opportunities
+              safely with contact requests only.
             </p>
-            <p className="hero-keyline">Not a place to talk. A place to be seen.</p>
-              <div className="cta-row">
-                <Link className="button button-primary" to="/create-profile">
-                  Build Your Profile
-                </Link>
-                <Link className="button button-secondary" to="/opportunities">
-                  Browse Opportunities
-                </Link>
-              </div>
-              <div className="badge-row hero-trust-row">
-                {trustPillars.map((item) => (
-                  <span className="badge hero-trust-badge" key={item.title}>
-                    {item.title}
-                  </span>
-                ))}
-              </div>
+            <p className="hero-keyline">Parent-safe. No DMs. Contact requests only.</p>
+            <div className="cta-row">
+              <Link className="button button-primary" to="/create-profile">
+                Build Your Profile
+              </Link>
+              <Link className="button button-secondary" to="/opportunities">
+                Find Opportunities
+              </Link>
+              <Link className="button button-subtle" to={pilotProfileLink}>
+                Start 2460 Pilot Flow
+              </Link>
             </div>
-
-          <div className="hero-preview-zone concept-preview-zone">
-            <div className="concept-preview-shell">
-              <div className="concept-preview-header">
-                <p className="card-kicker">Public resume preview</p>
-                <span className="status-chip status-chip-success">
-                  {spotlight && isVerifiedProfile(spotlight) ? "Verified athlete" : "Resume preview"}
+            <div className="badge-row hero-trust-row">
+              {trustPillars.map((item) => (
+                <span className="badge hero-trust-badge" key={item.title}>
+                  {item.title}
                 </span>
-              </div>
-              {spotlight ? (
-                <ProfilePreviewCard athlete={spotlight} highlight={featuredHighlight} compact />
-              ) : (
-                <article className="surface-card profile-preview-card empty-state-card">
-                  <p className="card-kicker">No profile loaded</p>
-                  <h3>Create the first premium athlete resume</h3>
-                  <p className="card-body">
-                    Use the local profile builder to load a player card into the experience.
-                  </p>
-                  <Link className="button button-primary" to="/create-profile">
-                    Build Your Profile
-                  </Link>
-                </article>
-              )}
+              ))}
             </div>
+          </div>
+          <div className="hero-visual-panel hero-banner-panel">
+            <img
+              alt="My Sports Resume multi-sport hero banner"
+              src={msrHeroBanner}
+            />
+            <div className="hero-banner-overlay-card">
+              <p className="card-kicker">Pilot-ready platform</p>
+              <h3>Pick your sport. Find your club. Get seen safely.</h3>
+              <p className="card-body">
+                Built for parents, athletes, clubs, and scouts with private highlights and contact requests only.
+              </p>
+              <div className="badge-row">
+                <span className="badge">Private highlights</span>
+                <span className="badge">Parent-safe</span>
+                <span className="badge">No direct messaging</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section className="home-preview-split">
+        <article className="surface-card home-preview-card">
+          <div className="concept-preview-header">
+            <p className="card-kicker">Resume preview</p>
+            <span className="status-chip status-chip-success">
+              {spotlight && isVerifiedProfile(spotlight) ? "Verified athlete" : "Resume preview"}
+            </span>
+          </div>
+          {spotlight ? (
+            <ProfilePreviewCard athlete={spotlight} highlight={featuredHighlight} compact />
+          ) : (
+            <article className="surface-card profile-preview-card empty-state-card">
+              <p className="card-kicker">No profile loaded</p>
+              <h3>Create the first premium athlete resume</h3>
+              <p className="card-body">
+                Use the profile builder to load a player card into the experience.
+              </p>
+              <Link className="button button-primary" to="/create-profile">
+                Build Your Profile
+              </Link>
+            </article>
+          )}
+        </article>
+        <article className="surface-card home-flow-card">
+          <p className="card-kicker">How it works</p>
+          <h3>Built for real local sport, not a social feed</h3>
+          <div className="checklist">
+            {[
+              "Choose your sport.",
+              "Enter your postcode.",
+              "Pick your club or team.",
+              "Build your resume.",
+              "Upload highlights privately.",
+              "Get seen safely through contact requests only.",
+            ].map((item) => (
+              <div className="check-item" key={item}>
+                <span className="check-mark done" />
+                <p>{item}</p>
+              </div>
+            ))}
           </div>
         </article>
       </section>
 
       <SportPathwayStrip
         description="Choose your sport, build your sports resume, and find clubs near your postcode."
+        selectedSport={selectedHomepageSport}
+        onSelectSport={setSelectedHomepageSport}
+        ctaItems={[
+          { label: "Find clubs near your postcode", to: "/create-profile", variant: "button button-secondary" },
+          { label: "Build your sports resume", to: "/create-profile", variant: "button button-primary" },
+        ]}
+        contextNote="Choose the sport first, then postcode, club, age group, and position."
       />
+
+      <section className="surface-card pilot-mode-card">
+        <div className="pilot-mode-copy">
+          <p className="card-kicker">2460 Pilot Mode</p>
+          <h3>South Grafton / Clarence Valley pilot</h3>
+          <p className="card-body">
+            For the first local pilot, start with your postcode, pick your club, and build a
+            private sports resume in minutes.
+          </p>
+          <div className="badge-row">
+            <span className="badge">Postcode 2460</span>
+            <span className="badge">Rugby League featured</span>
+            <span className="badge">Private highlights only</span>
+            <span className="badge">No direct messaging</span>
+          </div>
+          <div className="cta-row">
+            <Link className="button button-primary" to={pilotProfileLink}>
+              Create Junior Profile
+            </Link>
+            <Link
+              className="button button-secondary"
+              to="/highlight-manager?athleteId=athlete-junior-rugby-nsw"
+            >
+              Upload Highlights Privately
+            </Link>
+            <Link className="button button-secondary" to="/resume/athlete-junior-rugby-nsw">
+              View Safe Contact Rules
+            </Link>
+            <Link className="button button-subtle" to="/opportunities">
+              Browse Local Opportunities
+            </Link>
+          </div>
+          <p className="request-note">
+            Parent approval and contact-request safety remain in place throughout the pilot.
+          </p>
+        </div>
+        <div className="pilot-mode-directory">
+          <p className="card-kicker">{pilot2460Directory.areaLabel || "Grafton starter directory"}</p>
+          <h4>Suggested sports and clubs near 2460</h4>
+          <div className="badge-row">
+            {pilot2460Sports.map((sport) => (
+              <span className="badge" key={sport}>
+                {sport}
+              </span>
+            ))}
+          </div>
+          <div className="club-suggestion-grid">
+            {pilot2460Clubs.map((club) => (
+              <article className="club-suggestion-button static" key={club.id}>
+                <strong>{club.clubName}</strong>
+                <span>{joinMeta([club.sport, club.suburb, club.postcode])}</span>
+              </article>
+            ))}
+            <article className="club-suggestion-button static">
+              <strong>My club is not listed</strong>
+              <span>Added manually - pending verification</span>
+            </article>
+          </div>
+        </div>
+      </section>
 
       <section className="surface-card concept-trust-strip">
         {trustPillars.map((item) => (
@@ -13021,7 +13182,7 @@ function RoleDashboardPage({
           <SectionHeading
             eyebrow={getRoleConfig(selectedRole).eyebrow}
             title="My Profile"
-            description="Your latest sports resume appears here, whether it is still local-first or already linked to your Supabase account."
+            description="Your latest sports resume appears here, whether it is saved on this device or already saved securely."
           />
           <article className="surface-card empty-state-card">
             <p className="card-kicker">No athlete profile yet</p>
@@ -13493,7 +13654,7 @@ function AthleteDashboardPage({
   if (profile.profileStatus === "Pending Verification") {
     actionCards.push({
       title: "Go to Admin Dashboard",
-      copy: "This profile is waiting for review inside the demo admin queue.",
+      copy: "This profile is waiting for a review decision before broader visibility.",
       cta: "Open Admin Dashboard",
       to: "/admin",
     });
@@ -13505,8 +13666,8 @@ function AthleteDashboardPage({
 
     setActionStatus(
       copied
-        ? "Demo share link copied. In the full version this will become a secure shareable profile URL."
-        : `Demo share link: ${shareUrl}. In the full version this will become a secure shareable profile URL.`,
+        ? "Resume link copied. Private media still stays protected."
+        : `Resume link: ${shareUrl}. Private media still stays protected.`,
     );
   }
 
@@ -13550,10 +13711,10 @@ function AthleteDashboardPage({
 
         <div className="dashboard-actions">
           <Link className="button button-primary" to={`/resume/${profile.id}`}>
-            Preview Public Resume
+            Preview Resume
           </Link>
           <button className="button button-secondary" onClick={handleCopyDemoLink} type="button">
-            Copy Demo Share Link
+            Copy Resume Link
           </button>
           <button className="button button-subtle" onClick={handlePrintResume} type="button">
             Print Resume
@@ -13938,8 +14099,8 @@ function AthleteProfilePage({
 
     setShareStatus(
       copied
-        ? "Demo share link copied. In the full version this will become a secure shareable profile URL."
-        : `Demo share link: ${shareUrl}. In the full version this will become a secure shareable profile URL.`,
+        ? "Resume link copied. Private media still stays protected."
+        : `Resume link: ${shareUrl}. Private media still stays protected.`,
     );
   }
 
@@ -14019,10 +14180,10 @@ function AthleteProfilePage({
               ) : null}
               <div className="cta-row">
                 <Link className="button button-primary" to={`/resume/${athlete.id}`}>
-                  Preview Public Resume
+                  Preview Resume
                 </Link>
                 <button className="button button-secondary" onClick={handleCopyDemoLink} type="button">
-                  Copy Demo Share Link
+                  Copy Resume Link
                 </button>
                 {selectedRole === "club_scout" ? (
                   <button
@@ -14431,14 +14592,14 @@ function PublicResumePage({
     ? "Contact requests route to parent/guardian."
     : "Contact requests route to athlete.";
 
-  async function handleCopyDemoLink() {
+  async function handleCopyResumeLink() {
     const shareUrl = getDemoShareUrl(athlete.id);
     const copied = await copyTextToClipboard(shareUrl);
 
     setActionStatus(
       copied
-        ? "Demo share link copied. In the full version this will become a secure shareable profile URL."
-        : `Demo share link: ${shareUrl}. In the full version this will become a secure shareable profile URL.`,
+        ? "Resume link copied. Private media still stays protected."
+        : `Resume link: ${shareUrl}. Private media still stays protected.`,
     );
   }
 
@@ -14461,7 +14622,7 @@ function PublicResumePage({
     <section className="page-stack public-resume-page">
       <article className="surface-card public-resume-toolbar print-hidden">
         <div>
-          <p className="card-kicker">Public resume preview</p>
+          <p className="card-kicker">Resume preview</p>
           <h2>Shareable sports resume</h2>
           <p className="card-body">
             A scout-ready preview with safe contact routing, visibility controls, and print-friendly structure.
@@ -14471,8 +14632,8 @@ function PublicResumePage({
           <Link className="button button-subtle" to={`/athlete/${athlete.id}`}>
             Back to Edit/Profile
           </Link>
-          <button className="button button-secondary" onClick={handleCopyDemoLink} type="button">
-            Copy Demo Share Link
+          <button className="button button-secondary" onClick={handleCopyResumeLink} type="button">
+            Copy Resume Link
           </button>
           <button className="button button-primary" onClick={handlePrintResume} type="button">
             Print Resume
@@ -14751,6 +14912,7 @@ function OpportunitiesBoardPage({
   onExpressInterest,
 }) {
   const canCreateOpportunity = selectedRole === "club_scout" || selectedRole === "admin";
+  const [advancedFiltersExpanded, setAdvancedFiltersExpanded] = useState(false);
   const activeAthlete =
     getLatestRoleProfile(athletes, selectedRole, true) ||
     getLatestRoleProfile(athletes, selectedRole) ||
@@ -15018,22 +15180,22 @@ function OpportunitiesBoardPage({
     }
 
     const result = await onExpressInterest(opportunityId, activeAthlete.id);
-    setStatus(result?.message || "Interest could not be recorded in local demo mode.");
+    setStatus(result?.message || "Interest could not be recorded right now.");
   }
 
   return (
     <section className="page-stack">
       <SectionHeading
         eyebrow="Opportunities"
-        title="Discover opportunities by sport and postcode"
-        description="Choose a sport, search nearby clubs or organisations, and request contact safely."
+        title="Find safe local pathways by sport and postcode"
+        description="Choose a sport, then postcode/suburb, club or organisation, age group, and opportunity type."
       />
 
       <div className="dashboard-stat-grid">
         <MetricCard
           label="Total opportunities"
           value={`${opportunities.length}`}
-          detail="Structured local demo opportunities across club, academy, school, and pathway use cases"
+          detail="Structured opportunities across club, academy, school, and pathway use cases"
           tone="gold"
         />
         <MetricCard
@@ -15051,7 +15213,7 @@ function OpportunitiesBoardPage({
         <MetricCard
           label="Suggested athlete matches"
           value={`${filteredMatchCount}`}
-          detail="Profiles currently matching the filtered opportunity board"
+          detail="Profiles currently matching the active pathway filters"
           tone="gold"
         />
       </div>
@@ -15059,21 +15221,18 @@ function OpportunitiesBoardPage({
       <article className="surface-card search-board-card">
         <div className="search-board-topline">
           <div>
-            <p className="card-kicker">Recruitment board</p>
-            <h3>{filtered.length} opportunities match your current view</h3>
+            <p className="card-kicker">Pathway board</p>
+            <h3>{filtered.length} opportunities match your current search</h3>
           </div>
           <div className="inline-actions">
-            <span className="status-chip">
-              {opportunityBackendStatus?.modeLabel || "Local Demo"}
-            </span>
+            <span className="status-chip">Contact request only</span>
             <button className="button button-subtle inline-button" onClick={resetFilters} type="button">
               Reset Filters
             </button>
           </div>
         </div>
         <p className="request-note">
-          {opportunityBackendStatus?.message ||
-            "Opportunities stay structured and request-only with no direct messaging."}
+          Opportunities stay structured and request-only with no direct messaging.
         </p>
 
         <SportPathwayStrip
@@ -15081,6 +15240,11 @@ function OpportunitiesBoardPage({
           description="Sport -> Postcode/Suburb -> Club/Organisation -> Age Group -> Opportunity Type"
           selectedSport={filters.sport === "All" ? "" : filters.sport}
           onSelectSport={(sport) => updateFilter("sport", sport)}
+          compact
+          ctaItems={[
+            { label: "Build profile", to: "/create-profile", variant: "button button-primary" },
+          ]}
+          contextNote="Pathway-based discovery only. Contact requests stay structured and safe."
         />
 
         <div className="search-filter-grid">
@@ -15194,29 +15358,46 @@ function OpportunitiesBoardPage({
           </div>
         </div>
 
-        <div className="filter-grid secondary-filter-grid">
-          <FilterField
-            label="Junior or senior"
-            value={filters.juniorSenior}
-            options={["All", "Junior", "Senior"]}
-            onChange={(value) => updateFilter("juniorSenior", value)}
-          />
-          <article className="surface-card nested-card inline-info-card">
-            <p className="card-kicker">Safety note</p>
-            <h4>Contact requests only</h4>
-            <p className="card-body">
-              Opportunities stay structured and location-safe. Use postcode/suburb to find a club or organisation, then keep contact inside request records only.
-            </p>
-          </article>
+        <div className="search-board-advanced-toggle">
+          <button
+            className="button button-secondary"
+            onClick={() => setAdvancedFiltersExpanded((current) => !current)}
+            type="button"
+          >
+            {advancedFiltersExpanded ? "Hide extra filters" : "More filters"}
+          </button>
+          <p className="request-note">
+            Pathway view first: sport, postcode/suburb, club or organisation, age group, and opportunity type.
+          </p>
         </div>
 
-        <div className="checkbox-grid checkbox-grid-board">
-          <CheckboxChip
-            checked={filters.verifiedOnly}
-            label="Verified opportunities only"
-            onChange={() => updateFilter("verifiedOnly", !filters.verifiedOnly)}
-          />
-        </div>
+        {advancedFiltersExpanded ? (
+          <>
+            <div className="filter-grid secondary-filter-grid">
+              <FilterField
+                label="Junior or senior"
+                value={filters.juniorSenior}
+                options={["All", "Junior", "Senior"]}
+                onChange={(value) => updateFilter("juniorSenior", value)}
+              />
+              <article className="surface-card nested-card inline-info-card">
+                <p className="card-kicker">Safety note</p>
+                <h4>Contact requests only</h4>
+                <p className="card-body">
+                  Opportunities stay structured and location-safe. Use postcode/suburb to find a club or organisation, then keep contact inside request records only.
+                </p>
+              </article>
+            </div>
+
+            <div className="checkbox-grid checkbox-grid-board">
+              <CheckboxChip
+                checked={filters.verifiedOnly}
+                label="Verified opportunities only"
+                onChange={() => updateFilter("verifiedOnly", !filters.verifiedOnly)}
+              />
+            </div>
+          </>
+        ) : null}
       </article>
 
       {status ? <p className="banner banner-success">{status}</p> : null}
@@ -15229,7 +15410,7 @@ function OpportunitiesBoardPage({
               <h3>Create an opportunity</h3>
             </div>
             <p className="request-note">
-              New opportunities start as pending verification and use Supabase when your signed-in backend path is active.
+              New opportunities start as pending verification and stay request-only.
             </p>
           </div>
           <div className="detail-grid">
@@ -15599,7 +15780,14 @@ function OpportunityDetailPage({
             <DetailRow label="Competition level" value={opportunity.competitionLevel} />
             <DetailRow label="Opportunity type" value={opportunity.opportunityType} />
             <DetailRow label="Closing date" value={formatDisplayDate(opportunity.closingDate)} />
-            <DetailRow label="Source" value={getOpportunitySourceLabel(opportunity)} />
+            <DetailRow
+              label="Save status"
+              value={
+                getOpportunitySourceLabel(opportunity) === "Supabase"
+                  ? "Saved securely"
+                  : "Saved on this device only"
+              }
+            />
           </div>
         </article>
 
@@ -15613,8 +15801,8 @@ function OpportunityDetailPage({
               getOpportunityContactNote(opportunity).replace(" No direct messaging.", ""),
               "Exact addresses are never shown in the board.",
               getOpportunitySourceLabel(opportunity) === "Supabase"
-                ? "This opportunity is owner-scoped in Supabase for this phase. No public database-wide browsing yet."
-                : "This opportunity is still using the local/demo board path in this phase.",
+                ? "This opportunity stays owner-controlled in this phase. No public board-wide posting yet."
+                : "This opportunity is still saved on this device only in this phase.",
             ].map((item) => (
               <div className="check-item" key={item}>
                 <span className="check-mark done" />
@@ -15831,10 +16019,12 @@ function ShortlistPage({ shortlist, athletes, requestMap, onRequestContact, onRe
 }
 
 function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
+  const location = useLocation();
   const [form, setForm] = useState(() => createProfileFormDefaults(selectedRole));
   const [status, setStatus] = useState("");
   const [lastSavedSummary, setLastSavedSummary] = useState(null);
   const [advancedDetailsExpanded, setAdvancedDetailsExpanded] = useState(false);
+  const appliedPrefillSearchRef = useRef("");
   const isJunior = form.ageCategory === "Junior";
   const sportDefinition =
     findSportDefinition(form.sportId || form.sport) || getDefaultSportDefinition();
@@ -15931,13 +16121,71 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
   const builderChecklist = buildBuilderChecklist(form);
   const builderCompletionLabel = getProfileStrengthLabel(builderProgress);
   const roleLabel = getRoleLabel(selectedRole);
+  const pilotModeActive = new URLSearchParams(location.search).get("pilot") === "2460";
 
   useEffect(() => {
     setForm(createProfileFormDefaults(selectedRole));
     setStatus("");
     setLastSavedSummary(null);
     setAdvancedDetailsExpanded(false);
+    appliedPrefillSearchRef.current = "";
   }, [selectedRole]);
+
+  useEffect(() => {
+    const search = location.search || "";
+    if (!search || appliedPrefillSearchRef.current === search) {
+      return;
+    }
+
+    const params = new URLSearchParams(search);
+    const sport = String(params.get("sport") || "").trim();
+    const state = String(params.get("state") || "").trim();
+    const postcode = String(params.get("postcode") || "").trim();
+    const suburb = String(params.get("suburb") || "").trim();
+    const club = String(params.get("club") || "").trim();
+    const displayName = String(params.get("name") || "").trim();
+
+    if (![sport, state, postcode, suburb, club, displayName].some(Boolean)) {
+      appliedPrefillSearchRef.current = search;
+      return;
+    }
+
+    appliedPrefillSearchRef.current = search;
+    setAdvancedDetailsExpanded(false);
+    setForm((current) => {
+      const nextSport =
+        (sport && findSportDefinition(sport)) || findSportDefinition(current.sportId || current.sport);
+      const matchedClub = club ? getClubByName(club) : null;
+
+      return {
+        ...current,
+        displayName: displayName || current.displayName,
+        state: state || current.state,
+        postcode: postcode || current.postcode,
+        suburb: suburb || current.suburb,
+        sportCategory: nextSport?.category || current.sportCategory,
+        sportId: nextSport?.id || current.sportId,
+        sport: nextSport?.name || sport || current.sport,
+        club: club || current.club,
+        currentTeam: club || current.currentTeam,
+        customClubName:
+          club &&
+          !matchedClub &&
+          club !== AUSTRALIAN_CUSTOM_CLUB_VALUE &&
+          club !== NSW_RUGBY_LEAGUE_CUSTOM_CLUB_VALUE
+            ? club
+            : current.customClubName,
+        clubEntryType: matchedClub ? "directory" : current.clubEntryType,
+        isVerifiedClubEntry:
+          matchedClub ? matchedClub.verifiedStatus === "starter_seed" : current.isVerifiedClubEntry,
+        teamDirectoryId: matchedClub?.id || current.teamDirectoryId,
+        region: matchedClub?.groupOrAssociation || matchedClub?.region || current.region,
+        competition: matchedClub?.groupOrAssociation || matchedClub?.region || current.competition,
+        mainCompetition:
+          matchedClub?.groupOrAssociation || matchedClub?.region || current.mainCompetition,
+      };
+    });
+  }, [location.search]);
 
   function normalizeAvailabilityForAgeCategory(availability, shouldBeJunior) {
     const next = {
@@ -16294,10 +16542,10 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
         saved.message ||
           (saved.storageSource === "supabase"
             ? mode === "submit"
-              ? `${saved.profile.displayName} submitted and saved to your Supabase account.`
-              : `${saved.profile.displayName} draft saved to your Supabase account.`
+              ? `${saved.profile.displayName} saved securely and ready for review.`
+              : `${saved.profile.displayName} draft saved securely.`
             : mode === "submit"
-              ? `${saved.profile.displayName} submitted for local review.`
+              ? `${saved.profile.displayName} saved on this device and ready to finish later.`
               : `${saved.profile.displayName} draft saved on this device.`),
       );
       setForm(createProfileFormDefaults(selectedRole));
@@ -16341,6 +16589,22 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
               </p>
             </div>
           </div>
+
+          {pilotModeActive ? (
+            <article className="surface-card nested-card pilot-inline-card">
+              <p className="card-kicker">2460 Pilot Mode</p>
+              <h4>South Grafton / Clarence Valley quick start</h4>
+              <p className="card-body">
+                Start with Rugby League and postcode 2460, then choose a local club and save the
+                athlete profile in under two minutes.
+              </p>
+              <div className="badge-row">
+                <span className="badge">Postcode 2460</span>
+                <span className="badge">South Grafton Rebels</span>
+                <span className="badge">Grafton Ghosts</span>
+              </div>
+            </article>
+          ) : null}
 
           <div className="quick-profile-step-grid" aria-label="Quick profile setup steps">
             {QUICK_PROFILE_SETUP_STEPS.map((step, index) => (
@@ -16430,6 +16694,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                   description="Choose your sport, then enter postcode/suburb so local clubs are easier to find."
                   selectedSport={form.sport}
                   onSelectSport={updateSport}
+                  contextNote="Choose the sport first, then postcode, club, age group, and position."
                 />
               </div>
               <FormField
@@ -16564,7 +16829,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
               </div>
               <div className="detail-grid-full quick-step-divider">
                 <span>Step 3</span>
-                <strong>Choose age group and position</strong>
+                <strong>Choose club, age group and position</strong>
               </div>
               <FormField
                 label={usesStructuredRugbyLeagueForm ? "Team / age group" : "Age group"}
@@ -17099,7 +17364,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                     label="Parent approval"
                     value={isJunior ? "Required before visibility expands" : "Not required"}
                   />
-                <DetailRow label="Admin verification" value="Admin review queue" />
+                  <DetailRow label="Review status" value="Pending review" />
                   <DetailRow label="Scout visible status" value={form.profileVisibility} />
                 </div>
               </article>
@@ -17200,7 +17465,11 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
             </div>
           ) : null}
 
-          <div className="cta-row">
+          <div className="cta-row create-profile-save-row">
+            <div className="quick-step-divider quick-step-divider-inline">
+              <span>Step 4</span>
+              <strong>Save profile</strong>
+            </div>
             <button className="button button-subtle" onClick={() => submitForm("draft")} type="button">
               Save Draft
             </button>
@@ -17217,7 +17486,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
           <p className="card-kicker">Builder checklist</p>
           <h3>A cleaner way to build the resume</h3>
           <p className="card-body">
-            Your local draft feeds the premium player-card layout, highlight showcase, safe contact workflow, and trust dashboards.
+            Your profile feeds the player-card layout, highlight workflow, safe contact requests, and trusted review surfaces.
           </p>
           <div className="checklist">
             {builderChecklist.map((item) => (
@@ -17254,7 +17523,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                   className="button button-subtle"
                   to={`/resume/${lastSavedSummary.profileId}`}
                 >
-                  Preview Public Resume
+                  Preview Resume
                 </Link>
               </div>
             </article>
@@ -17351,7 +17620,7 @@ function HighlightManagerPage({
   const preserveThumbnailSelectionOnNextEditRef = useRef(false);
   const preserveVideoSelectionOnNextEditRef = useRef(false);
   const customThumbnailUploadSuccessMessage =
-    "Private thumbnail uploaded successfully. It is saved privately, linked to this Supabase highlight, pending review, and only visible through signed preview.";
+    "Private thumbnail uploaded successfully. It is saved privately, linked to this highlight, pending review, and only visible through signed preview.";
   const [form, setForm] = useState(() => ({
     id: "",
     athleteId: requestedAthleteId,
@@ -17430,19 +17699,19 @@ function HighlightManagerPage({
     : !hasSavedHighlightSelected
       ? "missing saved highlight"
       : !selectedHighlightIsSupabase
-        ? "local/demo highlight selected"
+        ? "saved on this device only"
         : !videoUploadReadiness?.videoUploadsEnabled
-          ? "bucket not ready"
+          ? "private uploads not ready"
           : !hasVideoFileSelected
             ? "missing video file"
             : "none";
   const videoUploadLockedMessage = !videoUploadReadiness?.signedIn
-    ? "Sign in with your Supabase account first. Video upload stays locked until you are signed in."
+    ? "Sign in first. Video upload stays locked until you are signed in."
     : !hasSavedHighlightSelected || !selectedHighlightIsSupabase
-      ? "Save a Supabase-backed highlight first. Video upload is locked until the highlight is saved."
-      : !videoUploadReadiness?.videoUploadsEnabled
+      ? "Save a highlight first. Video upload is locked until the highlight is saved."
+    : !videoUploadReadiness?.videoUploadsEnabled
         ? videoUploadReadiness?.message ||
-          "Video upload is locked until the private video bucket is ready."
+          "Video upload is locked until private uploads are ready."
         : !hasVideoFileSelected
           ? "Choose an MP4, MOV, or WEBM video under 100MB before uploading."
           : "Video upload is ready.";
@@ -17459,7 +17728,7 @@ function HighlightManagerPage({
     ? "Retry Private Thumbnail Upload"
     : supabaseHighlightReady
       ? "Upload Private Thumbnail Now"
-      : "Save Supabase Highlight & Upload Selected Thumbnail";
+      : "Save Highlight First & Upload Selected Thumbnail";
   const highlightCompetitionSuggestions = useMemo(() => {
     const options = [];
 
@@ -17694,7 +17963,7 @@ function HighlightManagerPage({
     if (!hasSavedHighlightSelected) {
       setThumbnailUploadStatus(
         nextFile
-          ? "Save the highlight first. Your selected thumbnail will upload after the highlight is saved to your Supabase account."
+          ? "Save the highlight first. Your selected thumbnail will upload after the highlight is saved securely."
           : "Choose a JPG, PNG, or WEBP thumbnail under 5MB, then save the highlight to upload it privately.",
       );
       return;
@@ -17703,8 +17972,8 @@ function HighlightManagerPage({
     if (!selectedHighlightIsSupabase) {
       setThumbnailUploadStatus(
         nextFile
-          ? "This local highlight will be saved to your Supabase account first, then the private thumbnail will upload."
-          : "This highlight is local/demo only. Choose a thumbnail, then save a Supabase-backed copy and upload it privately.",
+          ? "This highlight will be saved securely first, then the private thumbnail will upload."
+          : "This highlight is not saved securely yet. Choose a thumbnail, then save it before uploading privately.",
       );
       return;
     }
@@ -17866,14 +18135,14 @@ function HighlightManagerPage({
             canRetry: true,
             requiresFileReselect: false,
             message:
-              "Highlight save error: this highlight is still saved on this device only. Save or resave it to your Supabase account first before uploading a private thumbnail.",
+              "Highlight save error: this highlight is still saved on this device only. Save it securely first before uploading a private thumbnail.",
           },
           { afterSave: true },
         );
         successMessage = `${baseMessage} ${
           nextIssue.canRetry
-            ? "Retry the private thumbnail upload after the highlight saves to Supabase."
-            : "The private thumbnail upload is blocked until the highlight saves to Supabase."
+            ? "Retry the private thumbnail upload after the highlight saves securely."
+            : "The private thumbnail upload is blocked until the highlight saves securely."
         }`;
         setStatus(successMessage);
         return {
@@ -17924,7 +18193,7 @@ function HighlightManagerPage({
       successMessage =
         result?.source === "supabase" && result?.fallback !== true
           ? `${baseMessage} Highlight saved. You can now upload the private thumbnail.`
-          : `${baseMessage} This local highlight still is not Supabase-backed, so the private thumbnail upload cannot start yet.`;
+          : `${baseMessage} This highlight is still saved on this device only, so the private thumbnail upload cannot start yet.`;
     }
 
     setStatus(successMessage);
@@ -17932,14 +18201,14 @@ function HighlightManagerPage({
       setThumbnailUploadStatus(
         result?.source === "supabase" && result?.fallback !== true
           ? "Highlight saved. You can now upload the private thumbnail."
-          : "This local highlight still is not Supabase-backed, so the private thumbnail upload cannot start yet.",
+          : "This highlight is still saved on this device only, so the private thumbnail upload cannot start yet.",
       );
     }
     if (fromVideoFlow) {
       const savedToSupabase = result?.source === "supabase" && result?.fallback !== true;
       const videoMessage = savedToSupabase
-        ? "Supabase-backed highlight saved. Video upload is now unlocked."
-        : "Highlight save error: the video upload is still locked because this highlight did not save to Supabase.";
+        ? "Highlight saved securely. Video upload is now unlocked."
+        : "Highlight save error: the video upload is still locked because this highlight did not save securely.";
       setVideoUploadIssue(savedToSupabase ? "" : videoMessage);
       setVideoUploadStatus(videoMessage);
     }
@@ -17985,7 +18254,7 @@ function HighlightManagerPage({
     }
 
     setThumbnailUploadIssue(null);
-    setThumbnailUploadStatus("Uploading a private thumbnail to your Supabase account...");
+    setThumbnailUploadStatus("Uploading a private thumbnail...");
     const result = await onUploadHighlightThumbnail(thumbnailUploadFile, editingId);
 
     if (!result?.success) {
@@ -18036,7 +18305,7 @@ function HighlightManagerPage({
     }
 
     const message =
-      "This highlight is local/demo only. Use the full Supabase thumbnail test or save/create a Supabase-backed highlight before uploading.";
+      "This highlight is saved on this device only. Save it securely before uploading a private thumbnail.";
     setThumbnailUploadFailure(
       {
         errorCategory: "highlight_not_saved_error",
@@ -18076,7 +18345,7 @@ function HighlightManagerPage({
       return;
     }
 
-    setThumbnailUploadStatus("Uploading a built-in private test thumbnail to your Supabase account...");
+    setThumbnailUploadStatus("Uploading a built-in private test thumbnail...");
     const result = await onUploadHighlightThumbnail(generatedFileResult.file, readyResult.highlightId);
 
     if (!result?.success) {
@@ -18117,8 +18386,8 @@ function HighlightManagerPage({
     setThumbnailUploadIssue(null);
     setThumbnailUploadStatus(
       hasSavedHighlightSelected
-        ? "This local highlight will be saved to your Supabase account first, then the private thumbnail will upload."
-        : "Saving the highlight to your Supabase account, then uploading the private thumbnail...",
+        ? "This highlight will be saved securely first, then the private thumbnail will upload."
+        : "Saving the highlight securely, then uploading the private thumbnail...",
     );
     await submitHighlight({
       preserveThumbnailSelection: true,
@@ -18183,7 +18452,7 @@ function HighlightManagerPage({
     if (!hasSavedHighlightSelected) {
       setVideoReplaceStatus("");
       setVideoPreviewUrl("");
-      setVideoUploadStatus("Save or select a Supabase-backed highlight before uploading a private video.");
+      setVideoUploadStatus("Save or select a saved highlight before uploading a private video.");
       return;
     }
 
@@ -18191,14 +18460,14 @@ function HighlightManagerPage({
       setVideoReplaceStatus("");
       setVideoPreviewUrl("");
       setVideoUploadStatus(
-        "This highlight is local/demo only. Save or recreate it in your Supabase account first before private video upload can run.",
+        "This highlight is saved on this device only. Save it securely first before private video upload can run.",
       );
       return;
     }
 
     setVideoReplaceStatus(
       currentHighlightVideoAsset?.id
-        ? "Replace ready: the old private video will be replaced only after the new private upload succeeds."
+        ? "Replace ready: the current private video stays in place until the new upload finishes successfully."
         : "No existing private video will be replaced by this upload.",
     );
     setVideoUploadStatus(
@@ -18212,7 +18481,7 @@ function HighlightManagerPage({
     setVideoUploadIssue("");
     setVideoDeleteStatus("");
     setVideoReplaceStatus("");
-    setVideoUploadStatus("Saving the highlight to your Supabase account first...");
+    setVideoUploadStatus("Saving the highlight securely first...");
     await submitHighlight({
       fromVideoFlow: true,
       forceSupabaseForThumbnail: true,
@@ -18270,8 +18539,8 @@ function HighlightManagerPage({
     if (!hasSavedHighlightSelected || !selectedHighlightIsSupabase) {
       const message =
         !hasSavedHighlightSelected
-          ? "Save or select a Supabase-backed highlight before uploading a private video."
-          : "This highlight is local/demo only. Save or recreate it in your Supabase account first before private video upload can run.";
+          ? "Save or select a saved highlight before uploading a private video."
+          : "This highlight is saved on this device only. Save it securely first before private video upload can run.";
       setVideoUploadIssue(message);
       setVideoReplaceStatus("");
       setVideoUploadStatus(message);
@@ -18297,7 +18566,7 @@ function HighlightManagerPage({
     setVideoUploadStatus(
       replacingExistingVideo
         ? "Uploading the new private highlight video first. The old private video will be deleted only after this succeeds."
-        : "Uploading a private highlight video to your Supabase account...",
+        : "Uploading a private highlight video...",
     );
     const result = await onUploadHighlightVideo(videoUploadFile, editingId);
 
@@ -18344,11 +18613,11 @@ function HighlightManagerPage({
     );
     setVideoUploadStatus(
       result?.message ||
-        "Private highlight video uploaded successfully. It stays private, linked to this Supabase highlight, pending review, and only visible through signed owner preview.",
+        "Private highlight video uploaded successfully. It stays private, linked to this highlight, pending review, and only visible through signed owner preview.",
     );
     setStatus(
       result?.message ||
-        "Private highlight video uploaded successfully. It stays private, linked to this Supabase highlight, pending review, and only visible through signed owner preview.",
+        "Private highlight video uploaded successfully. It stays private, linked to this highlight, pending review, and only visible through signed owner preview.",
     );
   }
 
@@ -18405,7 +18674,7 @@ function HighlightManagerPage({
     }
     setVideoDeleteStatus(
       result?.deletedObjectPath
-        ? `Delete complete: private storage object removed from ${result.deletedObjectPath} and media metadata cleared.`
+        ? "Delete complete: the private video file was removed and the highlight record was cleared."
         : result?.message || "Private highlight video deleted.",
     );
     setVideoUploadStatus(result?.message || "Private highlight video deleted.");
@@ -18434,8 +18703,8 @@ function HighlightManagerPage({
     <section className="page-stack">
       <SectionHeading
         eyebrow="Highlight manager"
-        title="Resume media and highlight control"
-        description="Highlights are proof for your sports resume. Add, edit, feature, and review them from one clean control surface."
+        title="Add highlights and private media"
+        description="Pick the athlete, choose the highlight type, upload private media if you want, and save."
       />
 
       <article className="surface-card dashboard-hero">
@@ -18450,27 +18719,24 @@ function HighlightManagerPage({
               getLocationSummary(selectedAthlete),
             ])}
           </p>
-          <div className="badge-row">
-            <span className="status-chip status-chip-opportunity">
-              {athleteHighlights.length} highlight{athleteHighlights.length === 1 ? "" : "s"}
-            </span>
-            <span className="status-chip">
-              {selectedAthlete?.profileVisibleHighlightCount || 0} public resume ready
-            </span>
-            <span className="status-chip">
-              {selectedAthlete?.showcaseReadyHighlightCount || 0} showcase ready
-            </span>
-          </div>
+              <div className="badge-row">
+                <span className="status-chip status-chip-opportunity">
+                  {athleteHighlights.length} highlight{athleteHighlights.length === 1 ? "" : "s"}
+                </span>
+                <span className="status-chip">
+                  {selectedAthlete?.profileVisibleHighlightCount || 0} resume-ready clips
+                </span>
+                <span className="status-chip">
+                  {selectedAthlete?.showcaseReadyHighlightCount || 0} showcase-approved clips
+                </span>
+              </div>
         </div>
         <div className="dashboard-actions">
           <Link className="button button-primary" to={`/resume/${selectedAthlete?.id}`}>
-            Preview Public Resume
+            Preview Resume
           </Link>
           <Link className="button button-secondary" to="/highlights">
-            View Highlight Showcase
-          </Link>
-          <Link className="button button-secondary" to="/qa/media-approval">
-            Open Media Approval Test
+            View Showcase
           </Link>
           <button className="button button-subtle" onClick={() => resetForm()} type="button">
             Add New Highlight
@@ -18526,6 +18792,14 @@ function HighlightManagerPage({
 
       {status ? <p className="banner banner-success">{status}</p> : null}
 
+      <SportPathwayStrip
+        title="Choose your sport"
+        description="Pick athlete -> choose highlight type -> upload private thumbnail or video if wanted -> save."
+        selectedSport={selectedAthlete?.sport || ""}
+        compact
+        contextNote="You can add match details later. Private media stays private until reviewed."
+      />
+
       <div className="create-profile-grid highlight-manager-grid">
         <article className="surface-card create-profile-form-card">
           <div className="form-section-header">
@@ -18534,7 +18808,7 @@ function HighlightManagerPage({
               <h3>{editingId ? "Update highlight details" : "Attach a new highlight to the athlete resume"}</h3>
             </div>
             <p className="request-note">
-              Keep the language professional. This is a resume clip library built for serious athlete review.
+              Start with the athlete and the highlight type. Match details are optional and private uploads stay private.
             </p>
           </div>
 
@@ -18694,10 +18968,10 @@ function HighlightManagerPage({
               <p className="field-helper">
                 {!hasSavedHighlightSelected
                   ? hasThumbnailFileSelected
-                    ? "Save the highlight first. Your selected thumbnail will upload after the highlight is saved to your Supabase account."
-                    : "Choose a private JPG, PNG, or WEBP thumbnail under 5MB. The app will save the highlight to your Supabase account first, then upload the thumbnail privately."
+                    ? "Save the highlight first. Your selected thumbnail will upload after the highlight is saved securely."
+                    : "Choose a private JPG, PNG, or WEBP thumbnail under 5MB. The app will save the highlight securely first, then upload the thumbnail privately."
                   : !selectedHighlightIsSupabase
-                    ? "This local highlight will be saved to your Supabase account first, then the private thumbnail will upload."
+                    ? "This highlight will be saved securely first, then the private thumbnail will upload."
                     : "Optional custom upload. Use a private JPG, PNG, or WEBP thumbnail under 5MB. No public URL is created. Junior uploads stay pending parent/guardian approval, adult uploads stay pending admin review, and video upload comes later."}
               </p>
             </label>
@@ -18707,15 +18981,15 @@ function HighlightManagerPage({
                 {hasSavedHighlightSelected
                   ? selectedHighlightIsSupabase
                     ? "Owner-only thumbnail upload"
-                    : "Local/demo highlight selected"
+                    : "Save highlight first"
                   : "Save highlight first"}
               </h4>
               <p className="card-body">
                 {hasSavedHighlightSelected
                   ? selectedHighlightIsSupabase
-                    ? "Choose your own image and upload it privately for this saved Supabase highlight. No public URL is created."
-                    : "This local highlight will be saved to your Supabase account first, then the private thumbnail will upload."
-                  : "Choose a thumbnail now, then use the guided Supabase save-and-upload button below."}
+                    ? "Choose your own image and upload it privately for this saved highlight. No public URL is created."
+                    : "This highlight will be saved securely first, then the private thumbnail will upload."
+                  : "Choose a thumbnail now, then save the highlight and upload it privately."}
               </p>
               <div className="badge-row">
                 <span className="badge">Private upload</span>
@@ -18733,30 +19007,22 @@ function HighlightManagerPage({
                   value={editingId || "Not saved yet"}
                 />
                 <DetailRow
-                  label="Highlight source"
+                  label="Save status"
                   value={
                     !hasSavedHighlightSelected
                       ? "Not saved yet"
                       : selectedHighlightIsSupabase
-                        ? "Supabase"
-                        : "Local Demo"
+                        ? "Saved securely"
+                        : "Saved on this device only"
                   }
                 />
                 <DetailRow
-                  label="Supabase highlight ready"
-                  value={supabaseHighlightReady ? "Yes" : "No"}
+                  label="Private upload ready"
+                  value={supabaseHighlightReady ? "Yes" : "Save first"}
                 />
                 <DetailRow
                   label="Thumbnail file selected"
                   value={hasThumbnailFileSelected ? "Yes" : "No"}
-                />
-                <DetailRow
-                  label="Storage mode"
-                  value={backendStatus?.mediaStorageModeLabel || "Not Enabled"}
-                />
-                <DetailRow
-                  label="Thumbnail bucket"
-                  value={backendStatus?.highlightThumbnailBucketDetectedLabel || "unknown"}
                 />
                 <DetailRow
                   label="Public media access"
@@ -18814,12 +19080,12 @@ function HighlightManagerPage({
               <p className="request-note">
                 {!hasSavedHighlightSelected
                   ? hasThumbnailFileSelected
-                    ? "Save the highlight first. Your selected thumbnail will upload after the highlight is saved to your Supabase account."
+                    ? "Save the highlight first. Your selected thumbnail will upload after the highlight is saved securely."
                     : "Save or select a highlight before uploading a thumbnail."
                   : thumbnailNeedsFileReselect
                     ? "Please choose the thumbnail image again, then click Upload Private Thumbnail."
                     : !selectedHighlightIsSupabase
-                      ? "This local highlight will be saved to your Supabase account first, then the private thumbnail will upload."
+                      ? "This highlight will be saved securely first, then the private thumbnail will upload."
                     : thumbnailUploadStatus ||
                     (backendStatus?.uploadsEnabled
                       ? getMediaOwnerPresentationMessage(currentHighlightThumbnailAsset, {
@@ -18827,7 +19093,7 @@ function HighlightManagerPage({
                             "No private thumbnail asset is linked yet. Upload one to unlock signed owner preview in this panel.",
                           previewLoaded: Boolean(thumbnailPreviewUrl),
                         })
-                      : "Private thumbnail upload needs the media_assets table plus private storage buckets before it can run.")}
+                      : "Private thumbnail upload is not ready yet for this highlight.")}
               </p>
               <p className="request-note">
                 If a signed preview expires, use Load Private Preview again. Signed previews are never stored as `public_url`.
@@ -18835,9 +19101,9 @@ function HighlightManagerPage({
               <p className="request-note">
                 {hasSavedHighlightSelected
                   ? selectedHighlightIsSupabase
-                    ? "Choose your own thumbnail for the main real upload flow. Private video upload is available below for saved Supabase highlights."
-                    : "This local highlight is not ready for direct Supabase thumbnail upload yet. Use Save Supabase Highlight & Upload Selected Thumbnail."
-                  : "Choose a thumbnail now, then use Save Supabase Highlight & Upload Selected Thumbnail."}
+                    ? "Choose your own thumbnail for the main real upload flow. Private video upload is available below for saved highlights."
+                    : "This highlight is not ready for private thumbnail upload yet. Use Save Highlight First & Upload Selected Thumbnail."
+                  : "Choose a thumbnail now, then use Save Highlight First & Upload Selected Thumbnail."}
               </p>
               <div className="dashboard-actions">
                 <button
@@ -18877,12 +19143,12 @@ function HighlightManagerPage({
               />
               <p className="field-helper">
                 {!hasSavedHighlightSelected
-                  ? "Save a Supabase-backed highlight first. Video upload is locked until the highlight is saved."
+                  ? "Save a highlight first. Video upload is locked until the highlight is saved."
                   : !selectedHighlightIsSupabase
-                    ? "Save a Supabase-backed highlight first. Video upload is locked until the highlight is saved."
+                    ? "Save a highlight securely first. Video upload is locked until the highlight is saved."
                     : !videoUploadReadiness?.videoUploadsEnabled
                       ? videoUploadReadiness?.message ||
-                        "Run video_storage_private_phase_1.sql before private highlight video uploads can start."
+                        "Private video upload is not ready yet on this account."
                       : "Choose an MP4, MOV, or WEBM video under 100MB before uploading. No public URL is created. Junior uploads stay pending parent/guardian approval, adult uploads stay pending admin review, and signed preview stays owner-only."}
               </p>
             </label>
@@ -18892,15 +19158,15 @@ function HighlightManagerPage({
                 {hasSavedHighlightSelected
                   ? selectedHighlightIsSupabase
                     ? "Private Highlight Video Upload"
-                    : "Local/demo highlight selected"
-                  : "Save Supabase highlight first"}
+                    : "Save highlight first"
+                  : "Save highlight first"}
               </h4>
               <p className="card-body">
                 {hasSavedHighlightSelected
                   ? selectedHighlightIsSupabase
-                    ? "Upload a private highlight video for this saved Supabase highlight, keep it approval-gated, and load an owner-only signed preview. No public URL is created."
-                    : "Save a Supabase-backed highlight first. Video upload is locked until the highlight is saved."
-                  : "Save a Supabase-backed highlight first. Video upload is locked until the highlight is saved."}
+                    ? "Upload a private highlight video for this saved highlight, keep it approval-gated, and load an owner-only signed preview. No public URL is created."
+                    : "Save a highlight securely first. Video upload is locked until the highlight is saved."
+                  : "Save a highlight securely first. Video upload is locked until the highlight is saved."}
               </p>
               <div className="badge-row">
                 <span className="badge">Private owner preview</span>
@@ -18918,18 +19184,18 @@ function HighlightManagerPage({
                   value={editingId || "Not saved yet"}
                 />
                 <DetailRow
-                  label="Highlight source"
+                  label="Save status"
                   value={
                     !hasSavedHighlightSelected
                       ? "Not saved yet"
                       : selectedHighlightIsSupabase
-                        ? "Supabase"
-                        : "Local Demo"
+                        ? "Saved securely"
+                        : "Saved on this device only"
                   }
                 />
                 <DetailRow
-                  label="Supabase highlight ready"
-                  value={supabaseHighlightReady ? "Yes" : "No"}
+                  label="Private upload ready"
+                  value={supabaseHighlightReady ? "Yes" : "Save first"}
                 />
                 <DetailRow
                   label="Video file selected"
@@ -18952,10 +19218,10 @@ function HighlightManagerPage({
                   value="No"
                 />
                 <DetailRow
-                  label="Bucket"
+                  label="Private upload location"
                   value={backendStatus?.highlightVideoBucketDetectedLabel === "yes"
                     ? "msr-highlight-videos"
-                    : `${videoUploadReadiness?.bucketName || "msr-highlight-videos"} (${backendStatus?.highlightVideoBucketDetectedLabel || "unknown"})`}
+                    : "msr-highlight-videos (checking availability)"}
                 />
                 <DetailRow
                   label="Max size"
@@ -18978,7 +19244,7 @@ function HighlightManagerPage({
                   value={currentHighlightVideoAsset?.id || "Not linked yet"}
                 />
                 <DetailRow
-                  label="Storage object path"
+                  label="Saved file path"
                   value={currentHighlightVideoAsset?.storagePath || "Not linked yet"}
                 />
                 <DetailRow
@@ -19040,7 +19306,7 @@ function HighlightManagerPage({
               </p>
               {videoReplaceReady ? (
                 <p className="request-note">
-                  Replace ready: the old private video will be replaced only after the new private upload succeeds.
+                  Replace ready: the current private video stays in place until the new upload finishes successfully.
                 </p>
               ) : null}
               <p className="request-note">Private owner preview only.</p>
@@ -19056,7 +19322,7 @@ function HighlightManagerPage({
                     onClick={handleSaveSupabaseHighlightFirst}
                     type="button"
                   >
-                    Save Supabase Highlight First
+                    Save Highlight First
                   </button>
                 ) : null}
                 <button
@@ -19537,6 +19803,7 @@ function ScoutSearchPage({
     relocateOnly: false,
   };
   const [filters, setFilters] = useState(initialFilters);
+  const [advancedFiltersExpanded, setAdvancedFiltersExpanded] = useState(false);
   const usesStructuredScoutFilters =
     filters.state === "NSW" && filters.sport === "Rugby League";
 
@@ -19728,16 +19995,16 @@ function ScoutSearchPage({
   return (
     <section className="page-stack">
       <SectionHeading
-        eyebrow="Recruitment board"
-        title="Find athletes by sport and postcode"
-        description="Start with postcode/suburb, then choose sport, club, age group, and position."
+        eyebrow="Scout search"
+        title="Find athletes by local club, sport and age group"
+        description="Start with postcode/suburb, then choose sport, club, age group, and position. Contact requests only."
       />
 
       <div className="dashboard-stat-grid">
         <MetricCard
           label="Athlete resumes"
           value={`${athletes.length}`}
-          detail="Profiles currently stored in the local recruitment board"
+          detail="Profiles currently visible in this search"
           tone="gold"
         />
         <MetricCard
@@ -19757,8 +20024,8 @@ function ScoutSearchPage({
       <article className="surface-card search-board-card">
         <div className="search-board-topline">
           <div>
-            <p className="card-kicker">Live board</p>
-            <h3>{filtered.length} athlete resumes match your board</h3>
+            <p className="card-kicker">Search results</p>
+            <h3>{filtered.length} athlete resumes match your search</h3>
           </div>
           <div className="inline-actions">
             <span className="status-chip status-chip-success">Verified search environment</span>
@@ -19773,6 +20040,11 @@ function ScoutSearchPage({
           description="Postcode/Suburb -> Sport -> Club/Team -> Age Group -> Position"
           selectedSport={filters.sport === "All" ? "" : filters.sport}
           onSelectSport={(sport) => setFilter("sport", sport)}
+          compact
+          ctaItems={[
+            { label: "Build profile", to: "/create-profile", variant: "button button-primary" },
+          ]}
+          contextNote="Find athletes by local club, sport and age group. Contact requests only. No direct messaging."
         />
 
         <div className="search-filter-grid">
@@ -19846,7 +20118,7 @@ function ScoutSearchPage({
             <span className="status-chip">
               Sports: {scoutNearbyDirectory.sports.length > 0 ? scoutNearbyDirectory.sports.join(", ") : "No saved sports yet"}
             </span>
-            <span className="status-chip">Public media access: No</span>
+            <span className="status-chip">Private media stays protected</span>
           </div>
           <div className="club-suggestion-grid">
             {scoutClubSuggestions.length > 0 ? (
@@ -19879,57 +20151,74 @@ function ScoutSearchPage({
           </div>
         </div>
 
-        <div className="filter-grid secondary-filter-grid">
-          <FilterField
-            label="Competition level"
-            value={filters.competitionLevel}
-            options={competitionLevelOptions}
-            onChange={(value) => setFilter("competitionLevel", value)}
-          />
-          <FilterField
-            label="Junior or senior"
-            value={filters.juniorSenior}
-            options={["All", "Junior", "Senior"]}
-            onChange={(value) => setFilter("juniorSenior", value)}
-          />
-          <article className="surface-card nested-card inline-info-card">
-            <p className="card-kicker">Directory signals</p>
-            <h4>Club-first search</h4>
-            <p className="card-body">
-              {usesStructuredScoutFilters
-                ? "For NSW Rugby League, postcode/suburb and club are the main path. Group and competition are secondary filters."
-                : "Start with sport, state, postcode/suburb, club, age group, and position. Use the extra filters only when needed."}
-            </p>
-          </article>
+        <div className="search-board-advanced-toggle">
+          <button
+            className="button button-secondary"
+            onClick={() => setAdvancedFiltersExpanded((current) => !current)}
+            type="button"
+          >
+            {advancedFiltersExpanded ? "Hide extra filters" : "More filters"}
+          </button>
+          <p className="request-note">
+            {usesStructuredScoutFilters
+              ? "For NSW Rugby League, postcode/suburb and club are the main path. Group and competition are secondary."
+              : "Start with postcode, sport, club, age group, and position. Use extra filters only when needed."}
+          </p>
         </div>
 
-        <div className="checkbox-grid checkbox-grid-board">
-          <CheckboxChip
-            checked={filters.verifiedOnly}
-            label="Verified profiles only"
-            onChange={() => setFilter("verifiedOnly", !filters.verifiedOnly)}
-          />
-          <CheckboxChip
-            checked={filters.verifiedClubOnly}
-            label="Verified club/team only"
-            onChange={() => setFilter("verifiedClubOnly", !filters.verifiedClubOnly)}
-          />
-          <CheckboxChip
-            checked={filters.trialsOnly}
-            label="Available for trials"
-            onChange={() => setFilter("trialsOnly", !filters.trialsOnly)}
-          />
-          <CheckboxChip
-            checked={filters.seniorSigningOnly}
-            label="Available for senior signing"
-            onChange={() => setFilter("seniorSigningOnly", !filters.seniorSigningOnly)}
-          />
-          <CheckboxChip
-            checked={filters.relocateOnly}
-            label="Willing to relocate"
-            onChange={() => setFilter("relocateOnly", !filters.relocateOnly)}
-          />
-        </div>
+        {advancedFiltersExpanded ? (
+          <>
+            <div className="filter-grid secondary-filter-grid">
+              <FilterField
+                label="Competition level"
+                value={filters.competitionLevel}
+                options={competitionLevelOptions}
+                onChange={(value) => setFilter("competitionLevel", value)}
+              />
+              <FilterField
+                label="Junior or senior"
+                value={filters.juniorSenior}
+                options={["All", "Junior", "Senior"]}
+                onChange={(value) => setFilter("juniorSenior", value)}
+              />
+              <article className="surface-card nested-card inline-info-card">
+                <p className="card-kicker">Directory signals</p>
+                <h4>Club-first search</h4>
+                <p className="card-body">
+                  Advanced filters are optional. The main flow stays postcode, sport, club, age group, and position.
+                </p>
+              </article>
+            </div>
+
+            <div className="checkbox-grid checkbox-grid-board">
+              <CheckboxChip
+                checked={filters.verifiedOnly}
+                label="Verified profiles only"
+                onChange={() => setFilter("verifiedOnly", !filters.verifiedOnly)}
+              />
+              <CheckboxChip
+                checked={filters.verifiedClubOnly}
+                label="Verified club/team only"
+                onChange={() => setFilter("verifiedClubOnly", !filters.verifiedClubOnly)}
+              />
+              <CheckboxChip
+                checked={filters.trialsOnly}
+                label="Available for trials"
+                onChange={() => setFilter("trialsOnly", !filters.trialsOnly)}
+              />
+              <CheckboxChip
+                checked={filters.seniorSigningOnly}
+                label="Available for senior signing"
+                onChange={() => setFilter("seniorSigningOnly", !filters.seniorSigningOnly)}
+              />
+              <CheckboxChip
+                checked={filters.relocateOnly}
+                label="Willing to relocate"
+                onChange={() => setFilter("relocateOnly", !filters.relocateOnly)}
+              />
+            </div>
+          </>
+        ) : null}
       </article>
 
       <div className="card-grid search-results-grid">
@@ -20050,8 +20339,8 @@ function ScoutSearchPage({
           <article className="surface-card empty-state-card">
             <p className="card-kicker">No resumes found</p>
             <p className="card-body">
-              Try widening the filters to reopen the recruitment board, or create a new athlete
-              resume with club and competition details.
+              Try widening the filters to find more local athletes, or create a new athlete resume
+              with club and age-group detail.
             </p>
             <div className="cta-row">
               <button className="button button-secondary" onClick={resetFilters} type="button">
@@ -20278,7 +20567,7 @@ function ClubVerificationRequestPage({ onSubmitVerificationRequest, selectedRole
             <div className="builder-progress-panel">
               <span>{getRoleLabel(selectedRole)}</span>
               <p className="request-note">
-                Your request is saved safely for review.
+                Your request is saved securely for review.
               </p>
             </div>
           </div>
@@ -20367,7 +20656,7 @@ function ClubVerificationRequestPage({ onSubmitVerificationRequest, selectedRole
           <h3>What happens next</h3>
           <div className="checklist">
             {[
-              "Your organisation request is saved and queued for review.",
+              "Your organisation request is saved for review.",
               "Trust labels appear after checks are complete.",
               "Contact requests stay structured with no direct messaging.",
             ].map((item) => (
@@ -20703,8 +20992,8 @@ function ParentDashboardPage({
             })}
           </div>
           <p className="request-note">
-            Broader parent-linked cross-account review can come later after safer parent-child RLS
-            is designed. This phase remains owner/demo-safe only.
+            Parent-linked review will expand later. For now, approvals stay scoped to the athlete
+            profiles already connected to this dashboard.
           </p>
         </article>
       </div>
@@ -20726,8 +21015,8 @@ function ParentDashboardPage({
       <section className="content-section">
         <SectionHeading
           eyebrow="Pending approvals"
-          title="Junior request queue"
-          description="Approve visibility or keep content private from one premium review surface. Junior highlights must be parent approved before public or showcase visibility."
+          title="Junior approval centre"
+          description="Approve visibility or keep content private from one premium review surface. Junior highlights must be parent approved before broader visibility."
         />
 
         {pendingAthleteIds.length === 0 ? (
@@ -20815,7 +21104,7 @@ function ParentDashboardPage({
                 </article>
 
                 <div className="review-stack">
-                  <p className="card-kicker">Highlight approval queue</p>
+                  <p className="card-kicker">Highlight approvals</p>
                   {athleteHighlights.length === 0 ? (
                     <p className="request-note">No highlights added yet.</p>
                   ) : null}
@@ -21485,8 +21774,8 @@ function AdminDashboardPage({
           </div>
           <p className="request-note">
             {backendStatus?.currentOpportunitySource === "supabase"
-              ? "Supabase-backed owned opportunities can now save in this phase, while visibility remains owner-scoped and no public database-wide browsing is enabled."
-              : "Opportunities are still rendering through the local/demo board path in this phase, with no direct messaging and no public posting flow."}
+              ? "Owned opportunities can save securely in this phase while visibility stays controlled."
+              : "Opportunities still stay request-only in this phase, with no direct messaging and no public posting flow."}
           </p>
         </article>
       </div>
@@ -21628,8 +21917,25 @@ function SportPathwayStrip({
   sports = SPORT_FIRST_PATHWAY_OPTIONS,
   selectedSport = "",
   onSelectSport,
+  ctaItems = [],
+  compact = false,
+  contextNote = "Find clubs near your postcode, then keep building from there.",
 }) {
-  const normalizedSelected = normalizeText(selectedSport);
+  const activeSportName = selectedSport || sports[0] || "Rugby League";
+  const normalizedSelected = normalizeText(activeSportName);
+  const activeSportDefinition = findSportDefinition(activeSportName) || getDefaultSportDefinition();
+  const summary = SPORT_PATHWAY_SUMMARIES[activeSportDefinition.name] || SPORT_PATHWAY_SUMMARIES.Other;
+  const positionOptions = getDirectoryPositionsForSport(activeSportDefinition.name)
+    .filter((item) => item !== NSW_RUGBY_LEAGUE_OTHER_OPTION)
+    .slice(0, compact ? 6 : 8);
+  const highlightOptions = getDirectoryHighlightTypesForSport(activeSportDefinition.name)
+    .filter((item) => item !== NSW_RUGBY_LEAGUE_OTHER_OPTION)
+    .slice(0, compact ? 6 : 8);
+  const ageGroups = getDirectoryAgeGroupsForSport(activeSportDefinition.name);
+  const ageSummary = activeSportDefinition.supportsIndividual && !activeSportDefinition.supportsTeamClub
+    ? "Under 8 to Under 18, then Open or Masters."
+    : "Under 6 to Under 18, then senior grades.";
+  const getActionClassName = (variant) => variant || "button button-secondary";
 
   return (
     <article className="surface-card sport-pathway-strip">
@@ -21665,7 +21971,68 @@ function SportPathwayStrip({
           );
         })}
       </div>
-      <p className="request-note">Find clubs near your postcode, then keep building from there.</p>
+      <div className={compact ? "sport-space-panel compact" : "sport-space-panel"}>
+        <div className="sport-space-summary">
+          <p className="card-kicker">{activeSportDefinition.name}</p>
+          <h4>Build your {activeSportDefinition.name} pathway</h4>
+          <p className="card-body">{summary.description}</p>
+          <p className="request-note">{summary.pathway}</p>
+        </div>
+        <div className="sport-space-detail-grid">
+          <article className="sport-space-detail-card">
+            <p className="card-kicker">Common positions / roles</p>
+            <div className="badge-row">
+              {positionOptions.map((item) => (
+                <span className="badge" key={item}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          </article>
+          <article className="sport-space-detail-card">
+            <p className="card-kicker">Common highlights</p>
+            <div className="badge-row">
+              {highlightOptions.map((item) => (
+                <span className="badge" key={item}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          </article>
+          <article className="sport-space-detail-card">
+            <p className="card-kicker">Age group pathway</p>
+            <p className="card-body">{ageSummary}</p>
+            <p className="request-note">
+              {ageGroups.slice(0, 4).join(", ")}{ageGroups.length > 4 ? " ..." : ""}
+            </p>
+          </article>
+        </div>
+        {ctaItems.length > 0 ? (
+          <div className="cta-row sport-space-cta-row">
+            {ctaItems.map((item) =>
+              item.to ? (
+                <Link
+                  className={getActionClassName(item.variant)}
+                  key={`${item.label}-${item.to}`}
+                  to={item.to}
+                >
+                  {item.label}
+                </Link>
+              ) : (
+                <button
+                  className={getActionClassName(item.variant)}
+                  key={item.label}
+                  onClick={item.onClick}
+                  type="button"
+                >
+                  {item.label}
+                </button>
+              ),
+            )}
+          </div>
+        ) : null}
+      </div>
+      <p className="request-note">{contextNote}</p>
     </article>
   );
 }
