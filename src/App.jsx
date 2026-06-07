@@ -15763,10 +15763,15 @@ function OpportunitiesBoardPage({
           const matches = getMatchingAthletesForOpportunity(opportunity, athletes);
 
           return (
-            <article className="surface-card premium-search-card" key={opportunity.id}>
-              <p className="card-kicker">{opportunity.organisation}</p>
+            <article className="surface-card premium-search-card opportunity-card" key={opportunity.id}>
+              <div className="opportunity-card-topline">
+                <p className="card-kicker">{opportunity.organisation}</p>
+                <span className={isOpportunityVerified(opportunity) ? "status-chip status-chip-success" : "status-chip"}>
+                  {getOpportunityVerificationLabel(opportunity)}
+                </span>
+              </div>
               <h3>{opportunity.title}</h3>
-              <p className="card-meta">
+              <p className="card-meta opportunity-card-meta">
                 {joinMeta([
                   opportunity.sport,
                   opportunity.positionRole,
@@ -15776,24 +15781,20 @@ function OpportunitiesBoardPage({
               </p>
 
               <div className="badge-row">
-                <span className={isOpportunityVerified(opportunity) ? "status-chip status-chip-success" : "status-chip"}>
-                  {getOpportunityVerificationLabel(opportunity)}
-                </span>
                 <span className="status-chip">{getJuniorSeniorLabel(opportunity.isJuniorOpportunity)}</span>
                 <span className="status-chip status-chip-opportunity">{opportunity.opportunityType}</span>
                 <span className="status-chip">{getOpportunitySourceLabel(opportunity)}</span>
               </div>
 
-              <div className="detail-list">
+              <div className="detail-list opportunity-meta-grid">
                 <DetailRow label="Organisation" value={opportunity.organisation} />
-                <DetailRow label="Competition level" value={opportunity.competitionLevel || "Not provided"} />
+                <DetailRow label="Opportunity type" value={opportunity.opportunityType} />
                 <DetailRow label="Closing date" value={formatDisplayDate(opportunity.closingDate)} />
-                <DetailRow label="Source" value={getOpportunitySourceLabel(opportunity)} />
                 <DetailRow label="Safe route" value={getOpportunityContactNote(opportunity)} />
                 <DetailRow label="Suggested athletes" value={String(matches.length)} />
               </div>
 
-              <p className="card-body">{opportunity.description}</p>
+              <p className="card-body opportunity-description">{opportunity.description}</p>
 
               <div className="cta-row">
                 <Link className="button button-primary" to={`/opportunities/${opportunity.id}`}>

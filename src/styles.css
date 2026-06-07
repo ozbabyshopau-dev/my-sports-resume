@@ -7988,3 +7988,218 @@ button.sport-pathway-pill:hover {
     text-decoration: none !important;
   }
 }
+
+/* Final readability overrides for the pilot polish pass */
+.concept-hero-shell.concept-hero-shell-visual-first {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr) !important;
+}
+
+.concept-hero-copy h2,
+.hero-copy h2 {
+  max-width: 12.5ch !important;
+  font-size: clamp(2.2rem, 4vw, 3.55rem) !important;
+  line-height: 1.02 !important;
+  text-wrap: balance;
+}
+
+.hero-text {
+  max-width: 34rem !important;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.profile-preview-card .metric-card,
+.profile-preview-card .stat-card {
+  border-color: rgba(210, 168, 74, 0.16);
+  background:
+    linear-gradient(180deg, rgba(12, 16, 22, 0.98), rgba(18, 22, 30, 0.96)),
+    rgba(12, 16, 22, 0.96);
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.16);
+}
+
+.profile-preview-card .metric-card span,
+.profile-preview-card .stat-card span {
+  color: rgba(236, 229, 219, 0.76);
+}
+
+.profile-preview-card .metric-card strong,
+.profile-preview-card .stat-card strong {
+  color: #fff7eb;
+}
+
+.profile-preview-card .metric-card .card-body,
+.profile-preview-card .stat-card .card-body {
+  color: rgba(230, 222, 210, 0.88);
+}
+
+.profile-preview-card .highlight-canvas {
+  border: 1px solid rgba(210, 168, 74, 0.18);
+  background:
+    linear-gradient(180deg, rgba(12, 16, 22, 0.96), rgba(18, 22, 30, 0.95)),
+    rgba(12, 16, 22, 0.96);
+  color: #f8f2e6;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
+}
+
+.profile-preview-card .highlight-canvas span {
+  color: #d8be81;
+}
+
+.profile-preview-card .highlight-canvas small {
+  color: rgba(236, 229, 219, 0.78);
+}
+
+.sport-pathway-strip {
+  border-color: rgba(210, 168, 74, 0.16);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(210, 168, 74, 0.16), transparent 34%),
+    linear-gradient(155deg, #121417 0%, #191d24 100%);
+}
+
+.sport-pathway-topline h3 {
+  color: #f6efe3;
+}
+
+.sport-pathway-pill {
+  border-color: rgba(210, 168, 74, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f6efe3;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.sport-pathway-pill-selected {
+  border-color: rgba(210, 168, 74, 0.42);
+  background: linear-gradient(180deg, rgba(210, 168, 74, 0.24) 0%, rgba(18, 22, 30, 0.98) 100%);
+  color: #fff8ea;
+}
+
+.sport-space-panel {
+  border-color: rgba(210, 168, 74, 0.16);
+  background:
+    radial-gradient(circle at top right, rgba(210, 168, 74, 0.12), transparent 26%),
+    linear-gradient(180deg, rgba(16, 18, 22, 0.98), rgba(22, 26, 32, 0.95));
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.sport-space-summary h4 {
+  color: #fff7eb;
+}
+
+.sport-space-summary .card-body,
+.sport-space-summary .request-note {
+  color: rgba(230, 222, 210, 0.9);
+}
+
+.sport-space-detail-card {
+  border-color: rgba(210, 168, 74, 0.12);
+  background: rgba(10, 12, 16, 0.96);
+}
+
+.sport-space-detail-card .badge {
+  color: #f8f2e6;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.sport-space-detail-card .card-body,
+.sport-space-detail-card .request-note {
+  color: rgba(230, 222, 210, 0.84);
+}
+
+.opportunity-card {
+  gap: 0.9rem;
+}
+
+.opportunity-card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.opportunity-card-meta {
+  color: rgba(236, 229, 219, 0.88);
+  max-width: 100%;
+}
+
+.opportunity-meta-grid {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.opportunity-card .detail-row {
+  padding: 0.85rem 0.95rem !important;
+  border-radius: 18px;
+  border: 1px solid rgba(210, 168, 74, 0.12);
+  background:
+    linear-gradient(180deg, rgba(14, 16, 20, 0.96), rgba(20, 24, 30, 0.94)),
+    rgba(14, 16, 20, 0.94);
+}
+
+.opportunity-card .detail-label {
+  color: #d8be81 !important;
+}
+
+.opportunity-card .detail-value {
+  color: #f8f2e6 !important;
+}
+
+.opportunity-description {
+  color: rgba(236, 229, 219, 0.88) !important;
+  line-height: 1.6;
+}
+
+.dashboard-panel .detail-row,
+.review-queue-card .detail-row,
+.parent-item-card .detail-row {
+  padding: 0.82rem 0.95rem !important;
+  border-radius: 18px;
+  border: 1px solid rgba(210, 168, 74, 0.12);
+  background:
+    linear-gradient(180deg, rgba(14, 16, 20, 0.96), rgba(20, 24, 30, 0.94)),
+    rgba(14, 16, 20, 0.94);
+}
+
+.dashboard-panel .detail-label,
+.review-queue-card .detail-label,
+.parent-item-card .detail-label {
+  color: #d8be81 !important;
+}
+
+.dashboard-panel .detail-value,
+.review-queue-card .detail-value,
+.parent-item-card .detail-value {
+  color: #f8f2e6 !important;
+}
+
+.dashboard-panel .detail-list,
+.review-queue-card .detail-list,
+.parent-item-card .detail-list {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.dashboard-panel .review-row,
+.review-queue-card .review-row,
+.parent-item-card .review-row {
+  border-color: rgba(210, 168, 74, 0.12);
+  background:
+    linear-gradient(180deg, rgba(14, 16, 20, 0.96), rgba(20, 24, 30, 0.94)),
+    rgba(14, 16, 20, 0.94);
+}
+
+@media (max-width: 760px) {
+  .concept-hero-shell.concept-hero-shell-visual-first {
+    grid-template-columns: 1fr !important;
+  }
+
+  .concept-hero-copy h2,
+  .hero-copy h2 {
+    max-width: 100% !important;
+    font-size: clamp(2rem, 12vw, 2.85rem) !important;
+    line-height: 1.04 !important;
+    text-wrap: balance;
+  }
+
+  .hero-text {
+    max-width: 100% !important;
+  }
+}
