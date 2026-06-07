@@ -76,10 +76,10 @@ export const INDIVIDUAL_SPORT_AGE_GROUPS = [
 ];
 
 const DEFAULT_SOURCE_NOTE =
-  "Starter seed only - not a complete official Australian club database. Verify before official directory launch.";
+  "Starter postcode sports directory - not a complete official Australian club database.";
 
 const NEEDS_VERIFICATION_SOURCE_NOTE =
-  "Starter 2460 placeholder - needs local verification before official directory launch.";
+  "Starter local pathway placeholder pending club verification.";
 
 const DEFAULT_2460_AREA = "Grafton / South Grafton / Clarence Valley";
 const DEFAULT_2460_NEARBY_SUBURBS = [
@@ -105,7 +105,87 @@ const TEAM_SPORTS = new Set([
   "baseball",
   "softball",
   "volleyball",
+  "rowing",
 ]);
+
+const NSW_STARTER_ASSOCIATIONS_BY_SPORT = {
+  "rugby league": [
+    "Group 1 / Northern Rivers",
+    "Group 2",
+    "Group 3",
+    "Group 4",
+    "Group 6 / Macarthur",
+    "Group 7 / Illawarra South Coast",
+    "Group 9",
+    "Group 10 / Western Premiership area",
+    "Group 11 / Western Premiership area",
+    "Group 16",
+    "Group 19",
+    "Group 20",
+    "Group 21",
+    "Central Coast",
+    "Newcastle Rugby League",
+    "Canberra Region / Monaro",
+    "Western Rams",
+    "Riverina",
+    "North Coast",
+    "Sydney Metro / Junior League",
+  ],
+  "rugby union": [
+    "NSW Rugby pathway",
+    "Far North Coast / Mid North Coast rugby pathway - verify",
+    "Local rugby union pathway - verify",
+  ],
+  afl: ["AFL NSW/ACT pathway", "North Coast AFL pathway", "Local AFL club pathway - verify"],
+  soccer: [
+    "Northern NSW Football pathway",
+    "Football NSW pathway",
+    "North Coast Football pathway",
+    "Local club pathway - verify",
+  ],
+  netball: ["Netball NSW pathway", "North Coast Netball pathway", "Local association pathway - verify"],
+  basketball: [
+    "Basketball NSW pathway",
+    "North Coast Basketball pathway",
+    "Local basketball association - verify",
+  ],
+  cricket: ["Cricket NSW pathway", "North Coast Cricket pathway", "Local cricket association - verify"],
+  "touch football": ["Touch NSW pathway", "North Coast pathway - verify"],
+  oztag: ["Oztag NSW pathway", "North Coast pathway - verify"],
+  athletics: ["Athletics NSW pathway", "Regional track pathway - verify"],
+  swimming: ["Swimming NSW pathway", "Regional swim pathway - verify"],
+  boxing: ["Boxing NSW pathway", "Regional competition pathway - verify", "Local gym pathway - verify"],
+  "martial arts": ["Martial arts pathway - verify", "Local gym pathway - verify"],
+  tennis: ["Tennis NSW pathway", "North Coast tennis pathway - verify"],
+  hockey: ["Hockey NSW pathway", "Regional hockey association - verify"],
+  golf: ["Golf NSW pathway", "Regional club pathway - verify"],
+  baseball: ["Baseball NSW pathway", "North Coast baseball pathway - verify"],
+  softball: ["Softball NSW pathway", "North Coast softball pathway - verify"],
+  volleyball: ["Volleyball NSW pathway", "North Coast volleyball pathway - verify"],
+  rowing: ["Rowing NSW pathway", "Regional rowing pathway - verify"],
+  "surf life saving": [
+    "Surf Life Saving NSW pathway",
+    "Regional surf life saving pathway - verify",
+  ],
+  other: ["Local pathway - verify"],
+};
+
+const ORGANISATION_TYPES = {
+  CLUB: "club",
+  SCHOOL: "school",
+  ACADEMY: "academy",
+  ASSOCIATION: "association",
+  PATHWAY: "pathway",
+  GYM: "gym",
+  SQUAD: "squad",
+};
+
+const VERIFICATION_STATUSES = {
+  STARTER_SEED: "starter_seed",
+  STARTER_SEED_NEEDS_VERIFICATION: "starter_seed_needs_verification",
+  VERIFIED_LATER: "verified_later",
+  CUSTOM_UNVERIFIED: "custom_unverified",
+};
 
 const POSITION_OPTIONS_BY_SPORT = {
   "rugby league": NSW_RUGBY_LEAGUE_POSITION_OPTIONS,
@@ -124,9 +204,16 @@ const POSITION_OPTIONS_BY_SPORT = {
     "Other",
   ],
   afl: ["Defender", "Midfielder", "Ruck", "Forward", "Wing", "Utility", "Other"],
-  soccer: ["Goalkeeper", "Defender", "Fullback", "Midfielder", "Winger", "Striker", "Utility", "Other"],
+  soccer: ["Goalkeeper", "Defender", "Midfielder", "Winger", "Striker", "Utility", "Other"],
   netball: ["GS", "GA", "WA", "C", "WD", "GD", "GK", "Other"],
-  basketball: ["Point Guard", "Shooting Guard", "Small Forward", "Power Forward", "Centre", "Other"],
+  basketball: [
+    "Point Guard",
+    "Shooting Guard",
+    "Small Forward",
+    "Power Forward",
+    "Centre",
+    "Other",
+  ],
   cricket: ["Batter", "Bowler", "All-rounder", "Wicketkeeper", "Fielder", "Other"],
   "touch football": ["Middle", "Link", "Wing", "Utility", "Other"],
   oztag: ["Middle", "Link", "Wing", "Utility", "Other"],
@@ -160,24 +247,124 @@ const HIGHLIGHT_TYPES_BY_SPORT = {
     "Other",
   ],
   afl: ["Goal", "Mark", "Tackle", "Clearance", "Inside 50", "Intercept", "Spoil", "Run and carry", "Full game clip", "Other"],
-  soccer: ["Goal", "Assist", "Save", "Tackle", "Interception", "Through ball", "Cross", "Dribble", "Defensive recovery", "Set piece", "Full game clip", "Other"],
-  netball: ["Goal", "Intercept", "Deflection", "Feed", "Centre pass receive", "Rebound", "Defensive pressure", "Turnover", "Full game clip", "Other"],
-  basketball: ["Score", "Assist", "Rebound", "Steal", "Block", "Fast break", "Three-pointer", "Defensive stop", "Full game clip", "Other"],
-  cricket: ["Wicket", "Catch", "Run out", "Boundary", "Six", "Bowling spell", "Batting innings", "Keeper dismissal", "Fielding highlight", "Other"],
-  "touch football": ["Try", "Try assist", "Line break", "Dummy-half run", "Defensive read", "Touch", "Full game clip", "Other"],
+  soccer: [
+    "Goal",
+    "Assist",
+    "Save",
+    "Tackle",
+    "Interception",
+    "Through ball",
+    "Cross",
+    "Dribble",
+    "Defensive recovery",
+    "Set piece",
+    "Full game clip",
+    "Other",
+  ],
+  netball: [
+    "Goal",
+    "Intercept",
+    "Deflection",
+    "Feed",
+    "Centre pass receive",
+    "Rebound",
+    "Defensive pressure",
+    "Turnover",
+    "Full game clip",
+    "Other",
+  ],
+  basketball: [
+    "Score",
+    "Assist",
+    "Rebound",
+    "Steal",
+    "Block",
+    "Fast break",
+    "Three-pointer",
+    "Defensive stop",
+    "Full game clip",
+    "Other",
+  ],
+  cricket: [
+    "Wicket",
+    "Catch",
+    "Run out",
+    "Boundary",
+    "Six",
+    "Bowling spell",
+    "Batting innings",
+    "Keeper dismissal",
+    "Fielding highlight",
+    "Other",
+  ],
+  "touch football": [
+    "Try",
+    "Try assist",
+    "Line break",
+    "Dummy-half run",
+    "Defensive read",
+    "Touch",
+    "Full game clip",
+    "Other",
+  ],
   oztag: ["Try", "Try assist", "Line break", "Tag", "Defensive read", "Kick return", "Full game clip", "Other"],
-  boxing: ["Combination", "Defence", "Footwork", "Sparring clip", "Pad work", "Competition bout", "Technique clip", "Other"],
-  "martial arts": ["Combination", "Defence", "Footwork", "Sparring clip", "Pad work", "Competition bout", "Technique clip", "Other"],
+  boxing: [
+    "Combination",
+    "Defence",
+    "Footwork",
+    "Sparring clip",
+    "Pad work",
+    "Competition bout",
+    "Technique clip",
+    "Other",
+  ],
+  "martial arts": [
+    "Combination",
+    "Defence",
+    "Footwork",
+    "Sparring clip",
+    "Pad work",
+    "Competition bout",
+    "Technique clip",
+    "Other",
+  ],
   athletics: ["Race clip", "Start", "Finish", "PB attempt", "Relay", "Technique clip", "Training clip", "Other"],
   swimming: ["Race clip", "Start", "Finish", "PB attempt", "Relay", "Technique clip", "Training clip", "Other"],
   tennis: ["Winner", "Serve", "Rally", "Volley", "Return", "Match point", "Technique clip", "Other"],
-  hockey: ["Goal", "Assist", "Save", "Tackle", "Interception", "Penalty corner", "Full game clip", "Other"],
+  hockey: [
+    "Goal",
+    "Assist",
+    "Save",
+    "Tackle",
+    "Interception",
+    "Penalty corner",
+    "Full game clip",
+    "Other",
+  ],
   golf: ["Drive", "Approach", "Short game", "Putting", "Tournament round", "Technique clip", "Other"],
   baseball: ["Hit", "Home run", "Pitching", "Catch", "Throw", "Fielding play", "Full game clip", "Other"],
   softball: ["Hit", "Home run", "Pitching", "Catch", "Throw", "Fielding play", "Full game clip", "Other"],
-  volleyball: ["Kill", "Block", "Serve", "Dig", "Set", "Defensive save", "Full game clip", "Other"],
+  volleyball: [
+    "Kill",
+    "Block",
+    "Serve",
+    "Dig",
+    "Set",
+    "Defensive save",
+    "Full game clip",
+    "Other",
+  ],
   rowing: ["Race clip", "Start", "Finish", "Technique clip", "Training clip", "Other"],
-  "surf life saving": ["Race clip", "Start", "Finish", "Board leg", "Ski leg", "Swim leg", "Technique clip", "Other"],
+  "surf life saving": [
+    "Race clip",
+    "Start",
+    "Finish",
+    "Board leg",
+    "Ski leg",
+    "Swim leg",
+    "Technique clip",
+    "Other",
+  ],
   other: ["Race clip", "Technique clip", "Training clip", "Competition clip", "Full game clip", "Other"],
 };
 
@@ -195,6 +382,20 @@ function uniqueValues(values) {
 
 function isTeamSport(sport) {
   return TEAM_SPORTS.has(normalizeText(sport));
+}
+
+export function isVerifiedDirectoryStatus(status) {
+  const normalizedStatus = normalizeText(status);
+  return normalizedStatus === VERIFICATION_STATUSES.STARTER_SEED;
+}
+
+function isPendingVerificationDirectoryStatus(status) {
+  const normalizedStatus = normalizeText(status);
+  return (
+    normalizedStatus === VERIFICATION_STATUSES.STARTER_SEED_NEEDS_VERIFICATION ||
+    normalizedStatus === VERIFICATION_STATUSES.VERIFIED_LATER ||
+    normalizedStatus === VERIFICATION_STATUSES.CUSTOM_UNVERIFIED
+  );
 }
 
 function getStarterAgeGroupsForSport(sport) {
@@ -220,14 +421,18 @@ function makeClub({
   seniorGradesSupported,
   genderPathwaysSupported = ["Boys", "Girls", "Women", "Men"],
   positionOptions,
-  verifiedStatus = "starter_seed",
+  verifiedStatus = VERIFICATION_STATUSES.STARTER_SEED,
   sourceNote = DEFAULT_SOURCE_NOTE,
+  organisationType = ORGANISATION_TYPES.CLUB,
+  isStarterSeed = verifiedStatus === VERIFICATION_STATUSES.STARTER_SEED,
 }) {
   const resolvedCompetitionLevels =
     competitionLevelOptions || ["Junior", "Local Club", "Regional", "Representative", "Open"];
   const resolvedAgeGroups = ageGroupsSupported || getStarterAgeGroupsForSport(sport);
   const resolvedSeniorGrades = seniorGradesSupported || [];
   const resolvedPositionOptions = positionOptions || getPositionsForSport(sport);
+
+  const normalizedStatus = String(verifiedStatus || VERIFICATION_STATUSES.STARTER_SEED).trim();
 
   return {
     id,
@@ -257,10 +462,18 @@ function makeClub({
     genderPathwaysSupported,
     position_options: resolvedPositionOptions,
     positionOptions: resolvedPositionOptions,
-    verified_status: verifiedStatus,
-    verifiedStatus,
+    verified_status: normalizedStatus,
+    verifiedStatus: normalizedStatus,
     source_note: sourceNote,
     sourceNote,
+    organisation_type: organisationType,
+    organisationType,
+    verifiedStatusLabel: normalizeText(verifiedStatus),
+    is_starter_seed: isStarterSeed,
+    isStarterSeed,
+    isVerifiedDirectoryEntry: isVerifiedDirectoryStatus(normalizedStatus),
+    isVerifiedDirectoryStatus: isVerifiedDirectoryStatus(normalizedStatus),
+    isPendingVerification: isPendingVerificationDirectoryStatus(normalizedStatus),
   };
 }
 
@@ -272,7 +485,8 @@ function makeGraftonStarterClub({
   groupOrAssociation,
   competitionLevelOptions,
   positionOptions,
-  verifiedStatus = "starter_seed_needs_verification",
+  verifiedStatus = VERIFICATION_STATUSES.STARTER_SEED_NEEDS_VERIFICATION,
+  organisationType = ORGANISATION_TYPES.PATHWAY,
 }) {
   return makeClub({
     id,
@@ -289,11 +503,14 @@ function makeGraftonStarterClub({
     positionOptions,
     verifiedStatus,
     sourceNote:
-      verifiedStatus === "starter_seed" ? DEFAULT_SOURCE_NOTE : NEEDS_VERIFICATION_SOURCE_NOTE,
+      verifiedStatus === VERIFICATION_STATUSES.STARTER_SEED
+        ? DEFAULT_SOURCE_NOTE
+        : NEEDS_VERIFICATION_SOURCE_NOTE,
+    organisationType,
+    isStarterSeed: verifiedStatus === VERIFICATION_STATUSES.STARTER_SEED,
   });
 }
 
-// Starter postcode sports directory only - not a complete official Australian sports database.
 export const australianSportsClubDirectory = [
   makeClub({
     id: "club-rugby-league-south-grafton-rebels",
@@ -306,7 +523,8 @@ export const australianSportsClubDirectory = [
     groupOrAssociation: "Group 2",
     competitionLevelOptions: ["Junior", "Group 2", "Reserve Grade", "First Grade"],
     genderPathwaysSupported: ["Boys tackle", "Girls League Tag", "Women's Tackle", "Men"],
-    verifiedStatus: "starter_seed",
+    verifiedStatus: VERIFICATION_STATUSES.STARTER_SEED,
+    organisationType: ORGANISATION_TYPES.CLUB,
   }),
   makeClub({
     id: "club-rugby-league-grafton-ghosts",
@@ -319,79 +537,85 @@ export const australianSportsClubDirectory = [
     groupOrAssociation: "Group 2",
     competitionLevelOptions: ["Junior", "Group 2", "Reserve Grade", "First Grade"],
     genderPathwaysSupported: ["Boys tackle", "Girls League Tag", "Women's Tackle", "Men"],
-    verifiedStatus: "starter_seed",
+    verifiedStatus: VERIFICATION_STATUSES.STARTER_SEED,
+    organisationType: ORGANISATION_TYPES.CLUB,
   }),
   makeGraftonStarterClub({
     id: "club-netball-grafton-pathway-verify",
     sport: "Netball",
+    clubName: "Clarence Valley Netball pathway - verify",
+    shortName: "Clarence Valley Netball",
+    groupOrAssociation: "Clarence Valley Netball pathway - verify",
+  }),
+  makeGraftonStarterClub({
+    id: "club-netball-grafton-pathway-verify-2",
+    sport: "Netball",
     clubName: "Grafton Netball pathway - verify",
     shortName: "Grafton Netball",
-    groupOrAssociation: "Clarence Valley netball pathway - verify",
-    competitionLevelOptions: ["Junior", "Open", "Representative"],
+    groupOrAssociation: "Grafton Netball pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-soccer-clarence-valley-pathway-verify",
     sport: "Soccer",
-    clubName: "Clarence Valley Soccer pathway - verify",
-    shortName: "Clarence Valley Soccer",
-    groupOrAssociation: "Clarence Valley soccer pathway - verify",
-    competitionLevelOptions: ["Junior", "Open", "Representative"],
+    clubName: "North Coast Football / Soccer pathway - verify",
+    shortName: "North Coast Soccer",
+    groupOrAssociation: "North Coast Football pathway - verify",
+  }),
+  makeGraftonStarterClub({
+    id: "club-soccer-grafton-pathway-verify",
+    sport: "Soccer",
+    clubName: "Grafton Soccer pathway - verify",
+    shortName: "Grafton Soccer",
+    groupOrAssociation: "Grafton Soccer pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-basketball-grafton-pathway-verify",
     sport: "Basketball",
     clubName: "Grafton Basketball pathway - verify",
     shortName: "Grafton Basketball",
-    groupOrAssociation: "Clarence Valley basketball pathway - verify",
-    competitionLevelOptions: ["Junior", "Open", "Representative"],
+    groupOrAssociation: "Grafton Basketball pathway - verify",
   }),
   makeGraftonStarterClub({
-    id: "club-cricket-clarence-valley-pathway-verify",
-    sport: "Cricket",
-    clubName: "Clarence Valley Cricket pathway - verify",
-    shortName: "Clarence Valley Cricket",
-    groupOrAssociation: "Clarence Valley cricket pathway - verify",
-    competitionLevelOptions: ["Junior", "Open", "First Grade"],
+    id: "club-basketball-clarence-valley-pathway-verify",
+    sport: "Basketball",
+    clubName: "Clarence Valley Basketball pathway - verify",
+    shortName: "Clarence Valley Basketball",
+    groupOrAssociation: "Clarence Valley Basketball pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-rugby-union-grafton-pathway-verify",
     sport: "Rugby Union",
     clubName: "Grafton Rugby Union pathway - verify",
-    shortName: "Grafton Rugby",
-    groupOrAssociation: "Clarence Valley rugby union pathway - verify",
-    competitionLevelOptions: ["Junior", "Open", "First Grade"],
+    shortName: "Grafton Rugby Union",
+    groupOrAssociation: "Grafton Rugby Union pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-touch-football-grafton-pathway-verify",
     sport: "Touch Football",
     clubName: "Grafton Touch Football pathway - verify",
-    shortName: "Grafton Touch",
-    groupOrAssociation: "Clarence Valley touch football pathway - verify",
-    competitionLevelOptions: ["Junior", "Open", "Representative"],
+    shortName: "Grafton Touch Football",
+    groupOrAssociation: "Grafton Touch Football pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-oztag-grafton-pathway-verify",
     sport: "Oztag",
     clubName: "Grafton Oztag pathway - verify",
     shortName: "Grafton Oztag",
-    groupOrAssociation: "Clarence Valley Oztag pathway - verify",
-    competitionLevelOptions: ["Junior", "Open", "Representative"],
+    groupOrAssociation: "Grafton Oztag pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-athletics-grafton-pathway-verify",
     sport: "Athletics",
     clubName: "Grafton Athletics pathway - verify",
     shortName: "Grafton Athletics",
-    groupOrAssociation: "Clarence Valley athletics pathway - verify",
-    competitionLevelOptions: ["Junior", "Open", "Representative"],
+    groupOrAssociation: "Grafton Athletics pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-swimming-grafton-pathway-verify",
     sport: "Swimming",
     clubName: "Grafton Swimming pathway - verify",
     shortName: "Grafton Swimming",
-    groupOrAssociation: "Clarence Valley swimming pathway - verify",
-    competitionLevelOptions: ["Junior", "Open", "Representative"],
+    groupOrAssociation: "Grafton Swimming pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-boxing-grafton-pathway-verify",
@@ -399,15 +623,15 @@ export const australianSportsClubDirectory = [
     clubName: "Grafton Boxing pathway - verify",
     shortName: "Grafton Boxing",
     groupOrAssociation: "Clarence Valley boxing / combat sports pathway - verify",
-    competitionLevelOptions: ["Junior", "Open"],
+    organisationType: ORGANISATION_TYPES.GYM,
   }),
   makeGraftonStarterClub({
     id: "club-martial-arts-grafton-pathway-verify",
     sport: "Martial Arts",
-    clubName: "Grafton Martial Arts pathway - verify",
-    shortName: "Grafton Martial Arts",
-    groupOrAssociation: "Clarence Valley combat sports pathway - verify",
-    competitionLevelOptions: ["Junior", "Open"],
+    clubName: "Clarence Valley Martial Arts pathway - verify",
+    shortName: "Clarence Valley Martial Arts",
+    groupOrAssociation: "Clarence Valley Martial Arts pathway - verify",
+    organisationType: ORGANISATION_TYPES.GYM,
   }),
   makeGraftonStarterClub({
     id: "club-afl-clarence-valley-pathway-verify",
@@ -421,56 +645,82 @@ export const australianSportsClubDirectory = [
     sport: "Tennis",
     clubName: "Grafton Tennis pathway - verify",
     shortName: "Grafton Tennis",
-    groupOrAssociation: "Clarence Valley tennis pathway - verify",
+    groupOrAssociation: "Grafton Tennis pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-hockey-grafton-pathway-verify",
     sport: "Hockey",
     clubName: "Grafton Hockey pathway - verify",
     shortName: "Grafton Hockey",
-    groupOrAssociation: "Clarence Valley hockey pathway - verify",
+    groupOrAssociation: "Grafton Hockey pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-golf-grafton-pathway-verify",
     sport: "Golf",
     clubName: "Grafton Golf pathway - verify",
     shortName: "Grafton Golf",
-    groupOrAssociation: "Clarence Valley golf pathway - verify",
+    groupOrAssociation: "Grafton Golf pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-baseball-clarence-valley-pathway-verify",
     sport: "Baseball",
     clubName: "Clarence Valley Baseball pathway - verify",
     shortName: "Clarence Valley Baseball",
-    groupOrAssociation: "Clarence Valley baseball pathway - verify",
+    groupOrAssociation: "Clarence Valley Baseball pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-softball-clarence-valley-pathway-verify",
     sport: "Softball",
     clubName: "Clarence Valley Softball pathway - verify",
     shortName: "Clarence Valley Softball",
-    groupOrAssociation: "Clarence Valley softball pathway - verify",
+    groupOrAssociation: "Clarence Valley Softball pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-volleyball-grafton-pathway-verify",
     sport: "Volleyball",
     clubName: "Grafton Volleyball pathway - verify",
     shortName: "Grafton Volleyball",
-    groupOrAssociation: "Clarence Valley volleyball pathway - verify",
+    groupOrAssociation: "Grafton Volleyball pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-rowing-clarence-valley-pathway-verify",
     sport: "Rowing",
     clubName: "Clarence Valley Rowing pathway - verify",
     shortName: "Clarence Valley Rowing",
-    groupOrAssociation: "Clarence Valley rowing pathway - verify",
+    groupOrAssociation: "Clarence Valley Rowing pathway - verify",
   }),
   makeGraftonStarterClub({
     id: "club-surf-life-saving-clarence-valley-pathway-verify",
     sport: "Surf Life Saving",
     clubName: "Clarence Valley Surf Life Saving pathway - verify",
     shortName: "Clarence Valley SLS",
-    groupOrAssociation: "Clarence Valley surf life saving pathway - verify",
+    groupOrAssociation: "Clarence Valley Surf Life Saving pathway - verify",
+  }),
+  makeClub({
+    id: "club-cricket-grafton-pathway-verify",
+    sport: "Cricket",
+    clubName: "Grafton Cricket pathway - verify",
+    shortName: "Grafton Cricket",
+    suburb: "Grafton",
+    postcode: "2460",
+    nearbySuburbs: DEFAULT_2460_NEARBY_SUBURBS,
+    areaLabel: DEFAULT_2460_AREA,
+    groupOrAssociation: "Clarence Valley Cricket pathway - verify",
+    verifiedStatus: VERIFICATION_STATUSES.STARTER_SEED_NEEDS_VERIFICATION,
+    organisationType: ORGANISATION_TYPES.PATHWAY,
+  }),
+  makeClub({
+    id: "club-cricket-clarence-river-pathway-verify",
+    sport: "Cricket",
+    clubName: "Clarence River Cricket pathway - verify",
+    shortName: "Clarence River Cricket",
+    suburb: "Coffs Harbour",
+    postcode: "2450",
+    nearbySuburbs: DEFAULT_2460_NEARBY_SUBURBS,
+    areaLabel: DEFAULT_2460_AREA,
+    groupOrAssociation: "Clarence River Cricket pathway - verify",
+    verifiedStatus: VERIFICATION_STATUSES.STARTER_SEED_NEEDS_VERIFICATION,
+    organisationType: ORGANISATION_TYPES.PATHWAY,
   }),
   makeClub({
     id: "club-rugby-league-coffs-harbour-comets",
@@ -561,7 +811,9 @@ export function searchClubsByPostcode(postcode) {
     return [];
   }
 
-  return australianSportsClubDirectory.filter((club) => normalizePostcode(club.postcode) === normalizedPostcode);
+  return australianSportsClubDirectory.filter(
+    (club) => normalizePostcode(club.postcode) === normalizedPostcode,
+  );
 }
 
 export function getClubsByPostcode(postcode) {
@@ -591,6 +843,30 @@ export function getClubsBySportAndState(sport, state) {
     const stateMatches = !normalizedState || normalizeText(club.state) === normalizedState;
     return sportMatches && stateMatches;
   });
+}
+
+export function getAssociationsBySportAndState(sport, state) {
+  const sportClubs = getClubsBySportAndState(sport, state);
+  const normalizedSport = normalizeText(sport);
+  const stateSpecific = sportClubs.map(
+    (club) =>
+      club.groupOrAssociation ||
+      club.group_or_association ||
+      club.region ||
+      "",
+  );
+  if (stateSpecific.some(Boolean)) {
+    return uniqueValues(stateSpecific);
+  }
+
+  return uniqueValues(NSW_STARTER_ASSOCIATIONS_BY_SPORT[normalizedSport] || []);
+}
+
+export function getGroupsBySportAndPostcode({ postcode, sport, state } = {}) {
+  const clubs = getNearbyClubs({ postcode, suburb: "", sport, state });
+  return uniqueValues(
+    clubs.map((club) => club.groupOrAssociation || club.group_or_association || club.region),
+  );
 }
 
 export function getNearbyClubSuggestions({ sport, postcode, suburb, state } = {}) {
@@ -633,14 +909,6 @@ export function getSuburbsByPostcode(postcode) {
   );
 }
 
-export function getClubSuggestionsByPostcode({ postcode, sport } = {}) {
-  return filterClubsBySport(searchClubsByPostcode(postcode), sport);
-}
-
-export function getClubSuggestionsBySuburb({ suburb, sport } = {}) {
-  return filterClubsBySport(searchClubsBySuburb(suburb), sport);
-}
-
 export function getNearbySportsDirectory({ postcode, suburb, state } = {}) {
   const normalizedState = normalizeText(state);
   const postcodeMatches = searchClubsByPostcode(postcode);
@@ -668,6 +936,64 @@ export function getNearbySportsDirectory({ postcode, suburb, state } = {}) {
     suburbs,
     hasExactPostcode: postcodeMatches.length > 0,
   };
+}
+
+export function getClubSuggestionsByPostcode({ postcode, sport } = {}) {
+  return filterClubsBySport(searchClubsByPostcode(postcode), sport);
+}
+
+export function getClubSuggestionsBySuburb({ suburb, sport } = {}) {
+  return filterClubsBySport(searchClubsBySuburb(suburb), sport);
+}
+
+export function getNearbyClubs({ postcode, suburb, sport, state } = {}) {
+  return filterClubsBySport(
+    getNearbySportsDirectory({ postcode, suburb, state }).clubs,
+    sport,
+  );
+}
+
+export function getDirectoryCoverageSummary({ state, sport } = {}) {
+  const normalizedSport = normalizeText(sport);
+  const normalizedState = normalizeText(state);
+
+  const filtered = australianSportsClubDirectory.filter((entry) => {
+    const sportMatches = !normalizedSport || normalizeText(entry.sport) === normalizedSport;
+    const stateMatches = !normalizedState || normalizeText(entry.state) === normalizedState;
+    return sportMatches && stateMatches;
+  });
+
+  const bySport = {};
+  const statusCounts = {
+    starter_seed: 0,
+    starter_seed_needs_verification: 0,
+    verified_later: 0,
+    custom_unverified: 0,
+  };
+
+  const byPostcode = {};
+  filtered.forEach((entry) => {
+    const sportKey = entry.sport || "Other";
+    const status = String(entry.verified_status || entry.verifiedStatus || VERIFICATION_STATUSES.STARTER_SEED_NEEDS_VERIFICATION);
+    const postcodeKey = entry.postcode || "unspecified";
+    bySport[sportKey] = (bySport[sportKey] || 0) + 1;
+    statusCounts[status] = (statusCounts[status] || 0) + 1;
+    byPostcode[postcodeKey] = (byPostcode[postcodeKey] || 0) + 1;
+  });
+
+  return {
+    total: filtered.length,
+    bySport,
+    byPostcode,
+    ...statusCounts,
+    starterSeed: statusCounts.starter_seed,
+    pendingVerification:
+      statusCounts.starter_seed_needs_verification + statusCounts.verified_later + statusCounts.custom_unverified,
+  };
+}
+
+export function getStarterDirectoryForPostcode({ postcode, sport, state } = {}) {
+  return getNearbySportsDirectory({ postcode, sport, state });
 }
 
 export function getClubByName(name) {

@@ -26,17 +26,25 @@ import {
 } from "./data/sportsCatalog";
 import {
   AUSTRALIAN_CUSTOM_CLUB_VALUE,
+  getDirectoryCoverageSummary,
   getAgeGroupsForClub,
   getAgeGroupsForSport as getDirectoryAgeGroupsForSport,
   getClubByName,
   getClubSuggestionsByPostcode,
   getClubSuggestionsBySuburb,
+  isVerifiedDirectoryStatus,
   getHighlightTypesForSport as getDirectoryHighlightTypesForSport,
   getMainSportsList,
   getNearbySportsDirectory,
   getNearbyClubSuggestions,
   getPositionsForSport as getDirectoryPositionsForSport,
 } from "./data/australianSportsClubDirectory";
+import {
+  getNswPostcodeAreaLabel,
+  getNswPostcodeDirectoryEntry,
+  getNswPostcodeSportsByPostcode,
+  getNswPostcodeStarterSummary,
+} from "./data/nswPostcodeDirectory";
 import { opportunitySeed } from "./data/opportunitySeed";
 import {
   getAccountProfile,
@@ -208,8 +216,8 @@ const DEFAULT_PLAYING_HISTORY = {
 };
 
 const QUICK_PROFILE_SETUP_STEPS = [
-  "Who is the athlete?",
-  "Choose sport and location",
+  "Athlete basics",
+  "Sport and postcode",
   "Club, age group and position",
   "Save profile",
 ];
@@ -772,28 +780,28 @@ function getMoreLinksForRole(role, hasDemoAccount = false) {
       label: hasDemoAccount ? "Account" : "Create Account",
       to: hasDemoAccount ? "/account" : "/create-account",
       description: hasDemoAccount
-        ? "Review your account, backend status, and role settings."
-        : "Create a local-first account without enabling backend data migration.",
+        ? "Review your account, connection status, and role settings."
+        : "Create a local-first account without any backend migration step.",
     },
     {
       label: "Switch Role",
       to: "/start",
-      description: `Current role: ${roleConfig.label}. Change the demo pathway at any time.`,
+      description: `Current role: ${roleConfig.label}. Change the active pathway at any time.`,
     },
     {
       label: "Create Profile",
       to: "/create-profile",
-      description: "Build a new player card and route it through the platform trust flow.",
+      description: "Build a player card for clubs, coaches, and scouts.",
     },
     {
       label: "Contact Requests",
       to: "/requests",
-      description: "Review safe contact history and route visibility by role.",
+      description: "Review safe contact history and keep visibility controlled by role.",
     },
     {
       label: "Opportunities",
       to: "/opportunities",
-      description: "Browse or post structured sports opportunities without adding direct messaging.",
+      description: "Browse or post structured sports opportunities with no direct messaging.",
     },
     {
       label: "Shortlist",
@@ -803,7 +811,7 @@ function getMoreLinksForRole(role, hasDemoAccount = false) {
     {
       label: "Highlight Manager",
       to: "/highlight-manager",
-      description: "Add, edit, feature, and attach resume highlights inside a clean sports resume workflow.",
+      description: "Add and organise private highlights inside a clean sports resume workflow.",
     },
     {
       label: "Club Verification Request",
@@ -829,7 +837,7 @@ function getMoreLinksForRole(role, hasDemoAccount = false) {
     {
       label: "Club and Scout Search",
       to: "/search",
-      description: "Browse premium athlete resumes with verified discovery filters.",
+      description: "Browse athlete resumes with location, sport, and club discovery filters.",
     },
   ];
 }
@@ -2248,6 +2256,8 @@ function mapStarterClubToDirectoryTeam(club) {
     return null;
   }
 
+  const directoryStatus = club.verifiedStatus || club.verified_status || "starter_seed";
+
   return {
     id: club.id,
     name: club.clubName || club.club_name,
@@ -2258,9 +2268,35 @@ function mapStarterClubToDirectoryTeam(club) {
     postcode: club.postcode || "",
     competition: club.groupOrAssociation || club.group_or_association || club.region,
     level: "Regional",
-    clubEntryType: club.verifiedStatus || club.verified_status || "starter_seed",
-    isVerifiedDirectoryEntry: false,
+    clubEntryType: "directory",
+    isVerifiedDirectoryEntry: isVerifiedDirectoryStatus(directoryStatus),
+    verifiedStatus: directoryStatus,
   };
+}
+
+function isPendingDirectoryVerification(status) {
+  const normalizedStatus = String(status || "").trim().toLowerCase();
+  return (
+    normalizedStatus === "starter_seed_needs_verification" ||
+    normalizedStatus === "verified_later" ||
+    normalizedStatus === "custom_unverified"
+  );
+}
+
+function getDirectoryClubVerificationLabel(status) {
+  if (!status) {
+    return "Added manually - pending verification";
+  }
+
+  if (isVerifiedDirectoryStatus(status)) {
+    return "Verified starter directory entry";
+  }
+
+  if (isPendingDirectoryVerification(status)) {
+    return "Added manually - pending verification";
+  }
+
+  return "Pending verification";
 }
 
 function findStarterClubDirectoryEntry({ name, sportDefinition, state }) {
@@ -2877,7 +2913,11 @@ function getContactRoute(profile) {
 }
 
 function getLocationSummary(profile) {
-  return joinMeta([profile?.suburb || profile?.postcode, profile?.region, profile?.state]);
+  return joinMeta([
+    getNswPostcodeAreaLabel(profile?.postcode) || profile?.suburb || profile?.postcode,
+    profile?.region,
+    profile?.state,
+  ]);
 }
 
 function getTeamVerificationLabel(profile) {
@@ -4202,7 +4242,7 @@ async function createBuiltInPrivateVideoTestFile({
     context.font = "500 18px Arial, sans-serif";
     context.fillText(String(athleteDisplayName || "Athlete profile"), 46, 188);
     context.fillText(String(highlightTitle || "Saved highlight"), 46, 220);
-    context.fillText("Owner-only preview · No public URL · Approval-gated", 46, 264);
+    context.fillText("Owner-only preview - No public URL - Approval-gated", 46, 264);
 
     const barWidth = canvas.width - 92;
     const progress = ((frame % 8) + 1) / 8;
@@ -4495,8 +4535,8 @@ function getMediaOwnerPresentationMessage(
       return "Pending review. This media stays private and hidden in public-safe views until approval is complete.";
     case "parent_approved":
       return previewLoaded
-        ? "Parent approval is recorded. This signed owner preview stays private while admin review is still in progress."
-        : "Parent approval is recorded. Admin review is still required before broader signed-in display is allowed.";
+        ? "Parent approval is recorded. This signed owner preview stays private while review is still in progress."
+        : "Parent approval is recorded. Review is still required before broader signed-in display is allowed.";
     case "admin_approved":
       return previewLoaded
         ? "Owner preview loaded from a short-lived signed URL. Public and unauthenticated media access stay disabled."
@@ -4521,10 +4561,10 @@ function getMediaOwnerApprovalNote(mediaAsset) {
     return "Pending parent/guardian approval";
   }
   if (mediaAsset.approvalStatusRaw === "pending_review") {
-    return "Pending admin review";
+    return "Pending review";
   }
   if (mediaAsset.approvalStatusRaw === "parent_approved") {
-    return "Parent/guardian approved and still waiting on admin review";
+    return "Parent/guardian approved and still waiting on review";
   }
   if (mediaAsset.approvalStatusRaw === "admin_approved") {
     return "Approved for private profile-only viewing";
@@ -4536,7 +4576,7 @@ function getMediaOwnerApprovalNote(mediaAsset) {
     return "Archived and kept private";
   }
 
-  return mediaAsset.isJuniorMedia ? "Pending parent/guardian approval" : "Pending admin review";
+  return mediaAsset.isJuniorMedia ? "Pending parent/guardian approval" : "Pending review";
 }
 
 function getMediaReviewRouteLabel(mediaAsset) {
@@ -4545,8 +4585,8 @@ function getMediaReviewRouteLabel(mediaAsset) {
   }
 
   return mediaAsset.parentGuardianRequired
-    ? "Parent/guardian approval first, then admin review"
-    : "Admin review before broader visibility";
+    ? "Parent/guardian approval first, then review"
+    : "Review before broader visibility";
 }
 
 function MediaStatusBadge({ label, tone = "neutral" }) {
@@ -5256,7 +5296,7 @@ function App() {
         setProfileBackendTestState(
           createProfileBackendTestState({
             status: "pass",
-            label: "PASS — Supabase profile save/load works",
+            label: "PASS - Supabase profile save/load works",
             message:
               "Supabase profile save/load passed. A test profile was created and loaded from athlete_profiles.",
             savedProfileId,
@@ -5274,7 +5314,7 @@ function App() {
         setProfileBackendTestState(
           createProfileBackendTestState({
             status: "fallback",
-            label: "FALLBACK — saved locally only",
+            label: "FALLBACK - saved locally only",
             message:
               saveResult?.message ||
               "Profile test used localStorage fallback. Supabase profile backend did not win.",
@@ -5292,7 +5332,7 @@ function App() {
       setProfileBackendTestState(
         createProfileBackendTestState({
           status: "fail",
-          label: "FAIL — Supabase profile backend error",
+          label: "FAIL - Supabase profile backend error",
           message:
             saveResult?.message ||
             "The profile test could not confirm the saved athlete profile on reload.",
@@ -5308,7 +5348,7 @@ function App() {
       setProfileBackendTestState(
         createProfileBackendTestState({
           status: "fail",
-          label: "FAIL — Supabase profile backend error",
+          label: "FAIL - Supabase profile backend error",
           message: String(error?.message || "Unknown error."),
           lastRanAt: new Date().toISOString(),
         }),
@@ -5337,7 +5377,7 @@ function App() {
       setProfileBackendTestState((current) => ({
         ...current,
         status: "fail",
-        label: "FAIL — Supabase profile backend error",
+        label: "FAIL - Supabase profile backend error",
         message: result?.message || "Test profile cleanup could not be completed.",
         deleteMessage: result?.message || "Test profile cleanup could not be completed.",
       }));
@@ -5350,7 +5390,7 @@ function App() {
         status: current.status === "pass" ? "pass" : "idle",
         label:
           current.status === "pass"
-            ? "PASS — Supabase profile save/load works"
+            ? "PASS - Supabase profile save/load works"
             : "Not run yet",
         message:
           current.status === "pass"
@@ -12615,7 +12655,7 @@ function PrivateProfilePhotoUploadPanel({
         showPublicDisabled
       />
       <p className="request-note">
-        Media stays private. Junior media requires parent/guardian approval first, and adult media stays pending admin review before broader visibility is allowed.
+        Media stays private. Junior media requires parent/guardian approval first, and adult media stays pending review before broader visibility is allowed.
       </p>
       <label className="form-field">
         <span>Choose private profile photo</span>
@@ -12816,6 +12856,76 @@ function AdminMediaReviewPanel({ athletes, currentUserId, mediaAssets, onReviewM
   );
 }
 
+const NORMAL_PAGE_TEST_RECORD_PATTERNS = [
+  /\bmsr\b/i,
+  /\bsupabase\b/i,
+  /\bqa\b/i,
+  /\bdebug\b/i,
+  /test profile/i,
+  /test athlete/i,
+  /test highlight/i,
+  /test opportunity/i,
+  /test video/i,
+  /live upload confirm/i,
+  /delete video/i,
+  /replace video/i,
+];
+
+function isPilotVisibleRecord(values = []) {
+  const combined = values
+    .flatMap((value) => (Array.isArray(value) ? value : [value]))
+    .filter(Boolean)
+    .join(" ");
+
+  if (!combined.trim()) {
+    return true;
+  }
+
+  return !NORMAL_PAGE_TEST_RECORD_PATTERNS.some((pattern) => pattern.test(combined));
+}
+
+function isPilotVisibleAthlete(athlete) {
+  if (!athlete) {
+    return false;
+  }
+
+  return isPilotVisibleRecord([
+    athlete.displayName,
+    athlete.club,
+    athlete.currentTeam,
+    athlete.profileSummary,
+    athlete.achievements,
+  ]);
+}
+
+function isPilotVisibleHighlight(highlight) {
+  if (!highlight) {
+    return false;
+  }
+
+  return isPilotVisibleRecord([
+    highlight.title,
+    highlight.description,
+    highlight.matchEvent,
+    highlight.eventName,
+    highlight.opponent,
+    highlight.highlightType,
+  ]);
+}
+
+function isPilotVisibleOpportunity(opportunity) {
+  if (!opportunity) {
+    return false;
+  }
+
+  return isPilotVisibleRecord([
+    opportunity.title,
+    opportunity.organisation,
+    opportunity.description,
+    opportunity.requirements,
+  ]);
+}
+
 function HomePage({
   featuredAthlete,
   athletes,
@@ -12825,8 +12935,13 @@ function HomePage({
   adminQueues,
   requestRows,
 }) {
-  const spotlight = featuredAthlete || athletes[0] || null;
-  const featuredHighlight = spotlight ? getPrimaryHighlight(highlights, spotlight.id) : null;
+  const visibleAthletes = athletes.filter(isPilotVisibleAthlete);
+  const visibleHighlights = highlights.filter(isPilotVisibleHighlight);
+  const spotlight =
+    (featuredAthlete && isPilotVisibleAthlete(featuredAthlete) ? featuredAthlete : null) ||
+    visibleAthletes[0] ||
+    null;
+  const featuredHighlight = spotlight ? getPrimaryHighlight(visibleHighlights, spotlight.id) : null;
   const [selectedHomepageSport, setSelectedHomepageSport] = useState("Rugby League");
   const pilot2460Directory = getNearbySportsDirectory({ postcode: "2460", state: "NSW" });
   const pilot2460Clubs = getClubSuggestionsByPostcode({
@@ -12860,7 +12975,7 @@ function HomePage({
       eyebrow: "Athlete pathway",
       title: "Junior Athletes",
       copy: "Build a player-ready resume with highlights, pathway detail, and parent-controlled visibility.",
-      points: ["Parent approval flow", "Safe contact routes", "Public resume preview"],
+      points: ["Parent approval flow", "Safe contact routes", "Resume preview"],
       to: "/create-profile",
       cta: "Start Pathway",
     },
@@ -12869,7 +12984,7 @@ function HomePage({
       eyebrow: "Senior pathway",
       title: "18+ Players",
       copy: "Create a serious profile for clubs, first-grade opportunities, school sport, and relocation-ready discovery.",
-      points: ["Availability settings", "Shareable public resume", "Scout-ready profile strength"],
+      points: ["Availability settings", "Shareable resume", "Scout-ready profile strength"],
       to: "/create-profile",
       cta: "Build Resume",
     },
@@ -12956,19 +13071,18 @@ function HomePage({
               ))}
             </h2>
             <p className="hero-text">
-              Create a sports resume, upload highlights privately, and find clubs or opportunities
-              safely with contact requests only.
+              Create a sports resume, upload private highlights, and find safe club or opportunity pathways.
             </p>
-            <p className="hero-keyline">Parent-safe. No DMs. Contact requests only.</p>
+            <p className="hero-keyline">No DMs. No social feed. Contact requests only.</p>
             <div className="cta-row">
               <Link className="button button-primary" to="/create-profile">
                 Build Your Profile
               </Link>
-              <Link className="button button-secondary" to="/opportunities">
-                Find Opportunities
-              </Link>
               <Link className="button button-subtle" to={pilotProfileLink}>
                 Start 2460 Pilot Flow
+              </Link>
+              <Link className="button button-secondary" to="/opportunities">
+                Find Opportunities
               </Link>
             </div>
             <div className="badge-row hero-trust-row">
@@ -14111,7 +14225,7 @@ function AthleteProfilePage({
       window.open(printUrl, "_blank", "noopener,noreferrer");
     }
 
-    setShareStatus("Print-ready public resume opened in a new tab.");
+    setShareStatus("Print-ready resume opened in a new tab.");
   }
 
   return (
@@ -14150,7 +14264,7 @@ function AthleteProfilePage({
                 </span>
               </div>
               <div className="badge-row">
-                <span className="badge">{athlete.sportCategory || sportDefinition.category}</span>
+                <span className="badge">{athlete.sport || sportDefinition.name}</span>
                 <span className="badge">{athlete.position || "Role not set"}</span>
                 <span className="badge">{athlete.ageGroup || "Age group not set"}</span>
                 <span className="badge">{locationSummary}</span>
@@ -14809,7 +14923,7 @@ function PublicResumePage({
                     </div>
                     <p className="request-note">
                       {canOwnerPreviewResumeMedia
-                        ? "Signed-in owner views can load approved private previews elsewhere in the app, but this public resume route still stays metadata-first and public-safe."
+                        ? "Signed-in owner views can load approved private previews elsewhere in the app, but this public resume route still stays text-first and public-safe."
                         : "Private profile photos, thumbnails, and videos stay hidden here. Public media URLs and public video access are still disabled."}
                     </p>
                   </div>
@@ -14913,9 +15027,11 @@ function OpportunitiesBoardPage({
 }) {
   const canCreateOpportunity = selectedRole === "club_scout" || selectedRole === "admin";
   const [advancedFiltersExpanded, setAdvancedFiltersExpanded] = useState(false);
+  const visibleAthletes = athletes.filter(isPilotVisibleAthlete);
+  const visibleOpportunities = opportunities.filter(isPilotVisibleOpportunity);
   const activeAthlete =
-    getLatestRoleProfile(athletes, selectedRole, true) ||
-    getLatestRoleProfile(athletes, selectedRole) ||
+    getLatestRoleProfile(visibleAthletes, selectedRole, true) ||
+    getLatestRoleProfile(visibleAthletes, selectedRole) ||
     null;
   const [status, setStatus] = useState("");
   const [filters, setFilters] = useState({
@@ -14955,7 +15071,16 @@ function OpportunitiesBoardPage({
     suburb: filters.postcodeSuburb,
     state: filters.state === "All" ? "" : filters.state,
   });
-  const sportOptions = ["All", ...new Set([...opportunityNearbyDirectory.sports, ...getSimpleSportOptions()])];
+  const opportunityPostcodeSummary = getNswPostcodeStarterSummary(filters.postcodeSuburb);
+  const opportunityPostcodeSports = getNswPostcodeSportsByPostcode(filters.postcodeSuburb);
+  const sportOptions = [
+    "All",
+    ...new Set([
+      ...opportunityNearbyDirectory.sports,
+      ...opportunityPostcodeSports,
+      ...getSimpleSportOptions(),
+    ]),
+  ];
   const opportunityFilterClubSuggestions = [
     ...getClubSuggestionsByPostcode({
       postcode: filters.postcodeSuburb,
@@ -14977,8 +15102,14 @@ function OpportunitiesBoardPage({
     suburb: form.suburb,
     state: form.state,
   });
+  const opportunityFormPostcodeSummary = getNswPostcodeStarterSummary(form.postcode);
+  const opportunityFormPostcodeSports = getNswPostcodeSportsByPostcode(form.postcode);
   const opportunityFormSportOptions = [
-    ...new Set([...opportunityFormNearbyDirectory.sports, ...getSimpleSportOptions()]),
+    ...new Set([
+      ...opportunityFormNearbyDirectory.sports,
+      ...opportunityFormPostcodeSports,
+      ...getSimpleSportOptions(),
+    ]),
   ];
   const usesStructuredOpportunityAgeFilters =
     filters.state === "NSW" && filters.sport === "Rugby League";
@@ -14998,13 +15129,13 @@ function OpportunitiesBoardPage({
   const regionOptions = [
     "All",
     ...new Set(
-      opportunities
+      visibleOpportunities
         .filter((item) => filters.state === "All" || item.state === filters.state)
         .map((item) => item.region)
         .filter(Boolean),
     ),
   ];
-  const filtered = opportunities.filter((opportunity) => {
+  const filtered = visibleOpportunities.filter((opportunity) => {
     const query = filters.query.trim().toLowerCase();
     const blob = [
       opportunity.title,
@@ -15194,7 +15325,7 @@ function OpportunitiesBoardPage({
       <div className="dashboard-stat-grid">
         <MetricCard
           label="Total opportunities"
-          value={`${opportunities.length}`}
+          value={`${visibleOpportunities.length}`}
           detail="Structured opportunities across club, academy, school, and pathway use cases"
           tone="gold"
         />
@@ -15205,7 +15336,7 @@ function OpportunitiesBoardPage({
           tone="success"
         />
         <MetricCard
-          label="Pending opportunity reviews"
+          label="Pending checks"
           value={`${pendingCount}`}
           detail="Opportunities still waiting for verification checks"
           tone="blue"
@@ -15312,9 +15443,9 @@ function OpportunitiesBoardPage({
               </h4>
             </div>
             <p className="request-note">
-              {opportunityNearbyDirectory.areaLabel
-                ? `${opportunityNearbyDirectory.areaLabel} starter directory`
-                : "Suggested clubs and sports appear here when the starter directory has a match."}
+              {opportunityPostcodeSummary?.areaLabel || opportunityNearbyDirectory.areaLabel
+                ? `${opportunityPostcodeSummary?.areaLabel || opportunityNearbyDirectory.areaLabel} - ${opportunityPostcodeSummary?.directoryStatusLabel || "Starter area"}`
+                : "Suggested clubs and sports appear here when the postcode directory has a match."}
             </p>
           </div>
           <div className="directory-summary-row">
@@ -15349,11 +15480,11 @@ function OpportunitiesBoardPage({
                 </button>
               ))
             ) : (
-              <span className="club-suggestion-empty">
-                {filters.postcodeSuburb
-                  ? "No saved clubs for this postcode yet. Custom organisation fallback remains available."
-                  : "Try 2460 for the Grafton / South Grafton / Clarence Valley starter directory."}
-              </span>
+            <span className="club-suggestion-empty">
+              {filters.postcodeSuburb
+                ? "No saved clubs for this postcode yet. Add your club manually if needed."
+                : "Try 2460 for the Grafton / South Grafton / Clarence Valley starter directory."}
+            </span>
             )}
           </div>
         </div>
@@ -15444,10 +15575,16 @@ function OpportunitiesBoardPage({
               <div className="form-section-header compact-form-header">
                 <div>
                   <p className="card-kicker">Find local clubs by postcode</p>
-                  <h4>{opportunityFormNearbyDirectory.areaLabel || "Suggested sports appear here"}</h4>
+                  <h4>
+                    {opportunityFormPostcodeSummary?.areaLabel ||
+                      opportunityFormNearbyDirectory.areaLabel ||
+                      "Suggested sports appear here"}
+                  </h4>
                 </div>
                 <p className="request-note">
-                  Choose a local sport first, then pick the club/organisation if it appears. Custom organisations remain allowed.
+                  {(opportunityFormPostcodeSummary?.areaLabel || opportunityFormNearbyDirectory.areaLabel)
+                    ? `${opportunityFormPostcodeSummary?.areaLabel || opportunityFormNearbyDirectory.areaLabel} - ${opportunityFormPostcodeSummary?.directoryStatusLabel || "Starter area"}`
+                    : "Choose a local sport first, then pick the club/organisation if it appears. Custom organisations remain allowed."}
                 </p>
               </div>
               <div className="club-suggestion-grid">
@@ -15546,7 +15683,14 @@ function OpportunitiesBoardPage({
                       type="button"
                     >
                       <strong>{club.clubName}</strong>
-                      <span>{joinMeta([club.suburb, club.postcode, club.groupOrAssociation || club.region])}</span>
+                      <span>
+                        {joinMeta([club.suburb, club.postcode, club.groupOrAssociation || club.region])}
+                        {isPendingDirectoryVerification(
+                          club.verifiedStatus || club.verified_status || club.verificationStatus,
+                        )
+                          ? " - pending verification"
+                          : ""}
+                      </span>
                     </button>
                   ))
                 ) : (
@@ -16033,7 +16177,11 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
     suburb: form.suburb,
     state: form.state,
   });
-  const localSportOptions = nearbySportsDirectory.sports;
+  const postcodeStarterSummary = getNswPostcodeStarterSummary(form.postcode);
+  const localSportOptions =
+    nearbySportsDirectory.sports.length > 0
+      ? nearbySportsDirectory.sports
+      : getNswPostcodeSportsByPostcode(form.postcode);
   const hasLocationSearch = Boolean(String(form.postcode || form.suburb || "").trim());
   const usesStructuredRugbyLeagueForm = isStructuredNswRugbyLeagueMode(sportDefinition, form.state);
   const selectedSportName = form.sport || sportDefinition?.name || "Other";
@@ -16106,6 +16254,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
     matchedDirectoryTeam?.region ||
     "Auto-fills from club where available";
   const selectedLocationLabel =
+    postcodeStarterSummary?.areaLabel ||
     nearbySportsDirectory.areaLabel ||
     joinMeta([form.suburb, form.postcode, form.state]) ||
     "Enter postcode or suburb";
@@ -16113,7 +16262,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
   const teamFieldLabel = getTeamFieldLabel(sportDefinition);
   const competitionFieldLabel = getCompetitionFieldLabel(sportDefinition);
   const teamVerificationLabel = matchedDirectoryTeam
-    ? "Verified starter directory entry"
+    ? getDirectoryClubVerificationLabel(matchedDirectoryTeam.verifiedStatus || matchedDirectoryTeam.clubStatus || "")
     : resolvedFormValues.resolvedClub
       ? "Added manually - pending verification"
       : "No team, club, or program selected yet";
@@ -16177,7 +16326,9 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
             : current.customClubName,
         clubEntryType: matchedClub ? "directory" : current.clubEntryType,
         isVerifiedClubEntry:
-          matchedClub ? matchedClub.verifiedStatus === "starter_seed" : current.isVerifiedClubEntry,
+          matchedClub
+            ? isVerifiedDirectoryStatus(matchedClub.verifiedStatus || matchedClub.verified_status)
+            : current.isVerifiedClubEntry,
         teamDirectoryId: matchedClub?.id || current.teamDirectoryId,
         region: matchedClub?.groupOrAssociation || matchedClub?.region || current.region,
         competition: matchedClub?.groupOrAssociation || matchedClub?.region || current.competition,
@@ -16428,7 +16579,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
           currentTeam: directoryTeam.name,
           teamDirectoryId: directoryTeam.id,
           clubEntryType: directoryTeam.clubEntryType,
-          isVerifiedClubEntry: false,
+          isVerifiedClubEntry: Boolean(directoryTeam.isVerifiedDirectoryEntry),
           region: directoryTeam.region || current.region,
           state: directoryTeam.state || current.state,
           postcode: directoryTeam.postcode || current.postcode,
@@ -16558,7 +16709,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
     <section className="page-stack">
       <SectionHeading
         eyebrow="Profile builder"
-        title="Create a quick junior sports profile"
+        title="Create a sports profile in minutes"
         description="Start with the basics: athlete name, postcode, sport, club, age group, and position. Stats, achievements, and extra resume detail can be added later."
       />
 
@@ -16574,7 +16725,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
               </p>
             </div>
             <div className="builder-progress-panel">
-              <span>{builderCompletionLabel} resume depth</span>
+              <span>{builderCompletionLabel} profile progress</span>
               <div
                 className="completion-track"
                 role="progressbar"
@@ -16619,7 +16770,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
             <div className="form-section-header">
               <div>
                 <p className="card-kicker">Basic profile summary</p>
-                <h3>You have already answered the key questions</h3>
+                <h3>Your quick setup answers stay in one place</h3>
               </div>
               <p className="request-note">
                 Optional resume extras below should add new detail, not repeat these basics.
@@ -16676,18 +16827,9 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                   One simple note is enough. You can skip this now and add it later.
                 </p>
               </label>
-              <FormField
-                label="State"
-                select
-                value={form.state}
-                options={STATE_OPTIONS}
-                placeholderOption="Select state"
-                onChange={updateStateField}
-                helper="Use the athlete's main playing state."
-              />
               <div className="detail-grid-full quick-step-divider">
                 <span>Step 2</span>
-                <strong>Choose sport and location</strong>
+                <strong>Choose sport and postcode</strong>
               </div>
               <div className="detail-grid-full">
                 <SportPathwayStrip
@@ -16697,6 +16839,15 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                   contextNote="Choose the sport first, then postcode, club, age group, and position."
                 />
               </div>
+              <FormField
+                label="State"
+                select
+                value={form.state}
+                options={STATE_OPTIONS}
+                placeholderOption="Select state"
+                onChange={updateStateField}
+                helper="Use the athlete's main playing state."
+              />
               <FormField
                 label="Postcode or suburb"
                 value={form.postcode}
@@ -16718,13 +16869,13 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                     <h4>Find local clubs by postcode</h4>
                   </div>
                   <p className="request-note">
-                    {hasLocationSearch && nearbySportsDirectory.areaLabel
-                      ? `${nearbySportsDirectory.areaLabel} starter directory`
+                    {hasLocationSearch && (postcodeStarterSummary?.areaLabel || nearbySportsDirectory.areaLabel)
+                      ? `${postcodeStarterSummary?.areaLabel || nearbySportsDirectory.areaLabel} - ${postcodeStarterSummary?.directoryStatusLabel || "Starter area"}`
                       : "Enter a postcode or suburb first. If nothing is saved yet, you can still add your club manually."}
                   </p>
                 </div>
                 <div className="directory-summary-row">
-                  <span className="status-chip">Area: {nearbySportsDirectory.areaLabel || "Not selected yet"}</span>
+                  <span className="status-chip">Area: {postcodeStarterSummary?.areaLabel || nearbySportsDirectory.areaLabel || "Not selected yet"}</span>
                   <span className="status-chip">
                     Sports found: {localSportOptions.length > 0 ? localSportOptions.length : 0}
                   </span>
@@ -16748,7 +16899,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                   ) : (
                     <span className="club-suggestion-empty">
                       {hasLocationSearch
-                        ? "No saved clubs for this postcode yet. My club is not listed stays available."
+                        ? "No saved clubs for this postcode yet. Add my club manually if needed."
                         : "Try 2460 to see the Grafton / South Grafton / Clarence Valley starter directory."}
                     </span>
                   )}
@@ -16780,7 +16931,14 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                         type="button"
                       >
                         <strong>{club.clubName}</strong>
-                        <span>{joinMeta([club.suburb, club.postcode, club.groupOrAssociation || club.region])}</span>
+                        <span>
+                          {joinMeta([club.suburb, club.postcode, club.groupOrAssociation || club.region])}
+                          {isPendingDirectoryVerification(
+                            club.verifiedStatus || club.verified_status || club.verificationStatus,
+                          )
+                            ? " - pending verification"
+                            : ""}
+                        </span>
                       </button>
                     ))
                   ) : (
@@ -16815,7 +16973,17 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                   />
                   <DetailRow
                     label="Club status"
-                    value={selectedStarterClub ? "Starter directory match" : showCustomClubField ? "Custom club, saved safely" : "Not selected"}
+                    value={
+                      selectedStarterClub
+                        ? getDirectoryClubVerificationLabel(
+                            selectedStarterClub.verifiedStatus ||
+                              selectedStarterClub.verified_status ||
+                              selectedStarterClub.clubStatus,
+                          )
+                        : showCustomClubField
+                          ? "Added manually - pending verification"
+                          : "Not selected"
+                    }
                   />
                   <DetailRow
                     label="Age groups available"
@@ -16880,7 +17048,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                           value={form.customGroupRegion}
                           onChange={(value) => updateField("customGroupRegion", value)}
                           placeholder="Example: Local district junior competition"
-                          helper="Saved as custom NSW Rugby League region metadata when the starter directory needs expanding."
+                          helper="Saved as custom NSW Rugby League region information when the starter directory needs expanding."
                         />
                       ) : null}
                       {showCustomClubField ? (
@@ -17353,7 +17521,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
                 value={form.profileVisibility}
                 options={VISIBILITY_OPTIONS}
                 onChange={(value) => updateField("profileVisibility", value)}
-                helper="This controls the local demo visibility status until parent or admin review changes it."
+                helper="This controls the visibility status until parent or review changes it."
               />
               <article className="surface-card nested-card inline-info-card">
                 <p className="card-kicker">Trust summary</p>
@@ -17465,6 +17633,32 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
             </div>
           ) : null}
 
+          <article className="form-section-card save-profile-summary-card">
+            <div className="form-section-header">
+              <div>
+                <p className="card-kicker">Step 4</p>
+                <h3>Ready to save this profile</h3>
+              </div>
+              <p className="request-note">
+                Save a simple first profile now. Extra stats, achievements, and history can wait.
+              </p>
+            </div>
+            <div className="detail-list summary-detail-grid">
+              <DetailRow label="Athlete" value={form.displayName || "Add athlete name"} />
+              <DetailRow label="Sport" value={selectedSportName || "Choose sport"} />
+              <DetailRow label="Postcode / suburb" value={selectedLocationLabel} />
+              <DetailRow label="Club / team" value={selectedClubLabel} />
+              <DetailRow
+                label="Age group"
+                value={resolvedFormValues.resolvedAgeGroup || "Choose age group"}
+              />
+              <DetailRow
+                label="Position"
+                value={resolvedFormValues.resolvedPosition || "Choose position"}
+              />
+            </div>
+          </article>
+
           <div className="cta-row create-profile-save-row">
             <div className="quick-step-divider quick-step-divider-inline">
               <span>Step 4</span>
@@ -17483,8 +17677,8 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
         </article>
 
         <article className="surface-card create-profile-side-card">
-          <p className="card-kicker">Builder checklist</p>
-          <h3>A cleaner way to build the resume</h3>
+          <p className="card-kicker">Quick setup checklist</p>
+          <h3>Keep the first setup light and easy</h3>
           <p className="card-body">
             Your profile feeds the player-card layout, highlight workflow, safe contact requests, and trusted review surfaces.
           </p>
@@ -17529,7 +17723,7 @@ function CreateProfilePage({ onSaveProfile, selectedRole, statusMessage }) {
             </article>
           ) : null}
           <article className="surface-card nested-card builder-side-note">
-            <p className="card-kicker">Directory status</p>
+            <p className="card-kicker">Club match</p>
             <h4>{teamVerificationLabel}</h4>
             <p className="card-body">
               {matchedDirectoryTeam
@@ -17580,13 +17774,17 @@ function HighlightManagerPage({
   onRunFullHighlightThumbnailTest,
 }) {
   const location = useLocation();
+  const visibleAthletes = athletes.filter(isPilotVisibleAthlete);
+  const visibleHighlights = highlights
+    .filter(isPilotVisibleHighlight)
+    .filter((item) => visibleAthletes.some((athlete) => athlete.id === item.athleteId));
   const preferredProfile =
-    getLatestRoleProfile(athletes, selectedRole, true) ||
-    getLatestRoleProfile(athletes, selectedRole) ||
-    athletes[0] ||
+    getLatestRoleProfile(visibleAthletes, selectedRole, true) ||
+    getLatestRoleProfile(visibleAthletes, selectedRole) ||
+    visibleAthletes[0] ||
     null;
   const requestedAthleteId =
-    new URLSearchParams(location.search).get("athleteId") || preferredProfile?.id || athletes[0]?.id || "";
+    new URLSearchParams(location.search).get("athleteId") || preferredProfile?.id || visibleAthletes[0]?.id || "";
   const [editingId, setEditingId] = useState("");
   const [status, setStatus] = useState("");
   const [matchDetailsExpanded, setMatchDetailsExpanded] = useState(false);
@@ -17642,9 +17840,9 @@ function HighlightManagerPage({
     showcaseStatus: "Profile Only",
   }));
   const selectedAthlete =
-    athletes.find((item) => item.id === form.athleteId) ||
+    visibleAthletes.find((item) => item.id === form.athleteId) ||
     preferredProfile ||
-    athletes[0] ||
+    visibleAthletes[0] ||
     null;
   const selectedAthleteSportDefinition =
     findSportDefinition(selectedAthlete?.sportId || selectedAthlete?.sport) ||
@@ -17654,7 +17852,7 @@ function HighlightManagerPage({
   );
   const usesStructuredHighlightTypes = highlightTypeOptions.length > 0;
   const editingHighlight = editingId
-    ? highlights.find((item) => item.id === editingId) || null
+    ? visibleHighlights.find((item) => item.id === editingId) || null
     : null;
   const suggestedTags = highlightTypeOptions.filter((item) => item !== NSW_RUGBY_LEAGUE_OTHER_OPTION);
   const highlightTypeSelectionValue = usesStructuredHighlightTypes
@@ -17668,7 +17866,7 @@ function HighlightManagerPage({
       )
     : getPositionOptionsForSport(selectedAthleteSportDefinition);
   const athleteHighlights = selectedAthlete
-    ? getHighlightsForAthlete(highlights, selectedAthlete.id)
+    ? getHighlightsForAthlete(visibleHighlights, selectedAthlete.id)
     : [];
   const hasSavedHighlightSelected = Boolean(editingId);
   const hasThumbnailFileSelected = Boolean(thumbnailUploadFile);
@@ -17786,7 +17984,7 @@ function HighlightManagerPage({
 
   useEffect(() => {
     if (!form.athleteId && requestedAthleteId) {
-      const athlete = athletes.find((item) => item.id === requestedAthleteId) || preferredProfile;
+      const athlete = visibleAthletes.find((item) => item.id === requestedAthleteId) || preferredProfile;
       setForm(getEmptyForm(athlete, requestedAthleteId));
     }
   }, [athletes, form.athleteId, preferredProfile, requestedAthleteId]);
@@ -17796,7 +17994,7 @@ function HighlightManagerPage({
       return;
     }
 
-    const athlete = athletes.find((item) => item.id === requestedAthleteId) || preferredProfile;
+    const athlete = visibleAthletes.find((item) => item.id === requestedAthleteId) || preferredProfile;
     setForm(getEmptyForm(athlete, requestedAthleteId));
   }, [athletes, editingId, form.athleteId, preferredProfile, requestedAthleteId]);
 
@@ -17886,7 +18084,7 @@ function HighlightManagerPage({
   }
 
   function handleAthleteChange(athleteId) {
-    const athlete = athletes.find((item) => item.id === athleteId) || null;
+    const athlete = visibleAthletes.find((item) => item.id === athleteId) || null;
     setEditingId("");
     setMatchDetailsExpanded(false);
     setStatus("");
@@ -17898,7 +18096,7 @@ function HighlightManagerPage({
   }
 
   function resetForm(nextAthleteId = selectedAthlete?.id || requestedAthleteId) {
-    const athlete = athletes.find((item) => item.id === nextAthleteId) || selectedAthlete;
+    const athlete = visibleAthletes.find((item) => item.id === nextAthleteId) || selectedAthlete;
     setEditingId("");
     setMatchDetailsExpanded(false);
     setThumbnailUploadFile(null);
@@ -17909,7 +18107,7 @@ function HighlightManagerPage({
   }
 
   function startEdit(highlight) {
-    const athlete = athletes.find((item) => item.id === highlight.athleteId) || selectedAthlete;
+    const athlete = visibleAthletes.find((item) => item.id === highlight.athleteId) || selectedAthlete;
     setEditingId(highlight.id);
     setStatus("");
     setMatchDetailsExpanded(
@@ -18027,7 +18225,7 @@ function HighlightManagerPage({
     context.font = "500 18px Arial, sans-serif";
     context.fillText(selectedAthlete?.displayName || "Athlete profile", 46, 194);
     context.fillText(form.title || editingHighlight?.title || "Saved highlight", 46, 224);
-    context.fillText("Owner-only preview · No public URL · Video disabled", 46, 284);
+    context.fillText("Owner-only preview - No public URL - Video disabled", 46, 284);
     context.fillText("Pending review until approval rules are satisfied", 46, 312);
 
     const blob = await new Promise((resolve) => {
@@ -18358,9 +18556,11 @@ function HighlightManagerPage({
     setThumbnailPreviewUrl(result?.signedUrl || "");
     setThumbnailUploadIssue(null);
     setThumbnailUploadStatus(
-      `PASS — built-in private test thumbnail uploaded. ${result?.message || "Signed private preview loaded for the signed-in owner only."}`,
+      `PASS - built-in private test thumbnail uploaded. ${
+        result?.message || "Signed private preview loaded for the signed-in owner only."
+      }`,
     );
-    setStatus("PASS — built-in private test thumbnail uploaded successfully.");
+    setStatus("PASS - built-in private test thumbnail uploaded successfully.");
   }
 
   async function handleSelectedThumbnailUploadAction() {
@@ -18680,7 +18880,7 @@ function HighlightManagerPage({
     setVideoUploadStatus(result?.message || "Private highlight video deleted.");
   }
 
-  if (athletes.length === 0) {
+  if (visibleAthletes.length === 0) {
     return (
       <section className="page-stack">
         <SectionHeading
@@ -18746,7 +18946,7 @@ function HighlightManagerPage({
 
       <div className="dashboard-stat-grid">
         <MetricCard
-          label="Managed highlights"
+          label="Highlight library"
           value={`${athleteHighlights.length}`}
           detail="Highlights attached to the selected athlete profile"
           tone="gold"
@@ -18760,7 +18960,7 @@ function HighlightManagerPage({
                 item.approvalStatus === "Pending Admin Review",
             ).length
           }`}
-          detail="Review still controls visibility and trust status"
+          detail="Approval still controls visibility and trust status"
           tone="blue"
         />
         <MetricCard
@@ -18816,7 +19016,7 @@ function HighlightManagerPage({
             <label className="form-field detail-grid-full">
               <span>Athlete / profile selector</span>
               <select value={form.athleteId} onChange={(event) => handleAthleteChange(event.target.value)}>
-                {athletes.map((athlete) => (
+                {visibleAthletes.map((athlete) => (
                   <option key={athlete.id} value={athlete.id}>
                     {athlete.displayName} - {athlete.sport} - {athlete.ageGroup}
                   </option>
@@ -18972,7 +19172,7 @@ function HighlightManagerPage({
                     : "Choose a private JPG, PNG, or WEBP thumbnail under 5MB. The app will save the highlight securely first, then upload the thumbnail privately."
                   : !selectedHighlightIsSupabase
                     ? "This highlight will be saved securely first, then the private thumbnail will upload."
-                    : "Optional custom upload. Use a private JPG, PNG, or WEBP thumbnail under 5MB. No public URL is created. Junior uploads stay pending parent/guardian approval, adult uploads stay pending admin review, and video upload comes later."}
+                    : "Optional custom upload. Use a private JPG, PNG, or WEBP thumbnail under 5MB. No public URL is created. Junior uploads stay pending parent/guardian approval, adult uploads stay pending review, and video upload comes later."}
               </p>
             </label>
             <div className="detail-grid-full surface-card nested-card">
@@ -19049,7 +19249,7 @@ function HighlightManagerPage({
                   value={getMediaVisibilityDisplayLabel(currentHighlightThumbnailAsset)}
                 />
                 <DetailRow
-                  label="Signed private preview loaded"
+                  label="Private preview loaded"
                   value={thumbnailPreviewUrl ? "Yes" : "No"}
                 />
                 <DetailRow
@@ -19149,7 +19349,7 @@ function HighlightManagerPage({
                     : !videoUploadReadiness?.videoUploadsEnabled
                       ? videoUploadReadiness?.message ||
                         "Private video upload is not ready yet on this account."
-                      : "Choose an MP4, MOV, or WEBM video under 100MB before uploading. No public URL is created. Junior uploads stay pending parent/guardian approval, adult uploads stay pending admin review, and signed preview stays owner-only."}
+                      : "Choose an MP4, MOV, or WEBM video under 100MB before uploading. No public URL is created. Junior uploads stay pending parent/guardian approval, adult uploads stay pending review, and signed preview stays owner-only."}
               </p>
             </label>
             <div className="detail-grid-full surface-card nested-card">
@@ -19218,10 +19418,10 @@ function HighlightManagerPage({
                   value="No"
                 />
                 <DetailRow
-                  label="Private upload location"
+                  label="Upload destination"
                   value={backendStatus?.highlightVideoBucketDetectedLabel === "yes"
-                    ? "msr-highlight-videos"
-                    : "msr-highlight-videos (checking availability)"}
+                    ? "Private owner-only area"
+                    : "Private owner-only area"}
                 />
                 <DetailRow
                   label="Max size"
@@ -19240,12 +19440,12 @@ function HighlightManagerPage({
                   }
                 />
                 <DetailRow
-                  label="Video media asset id"
-                  value={currentHighlightVideoAsset?.id || "Not linked yet"}
+                  label="Private video record"
+                  value={currentHighlightVideoAsset?.id ? "Linked" : "Not linked yet"}
                 />
                 <DetailRow
-                  label="Saved file path"
-                  value={currentHighlightVideoAsset?.storagePath || "Not linked yet"}
+                  label="Private file"
+                  value={currentHighlightVideoAsset?.storagePath ? "Saved privately" : "Not linked yet"}
                 />
                 <DetailRow
                   label="Approval status"
@@ -19260,7 +19460,7 @@ function HighlightManagerPage({
                   value={currentHighlightVideoAsset?.publicUrl ? "Yes" : "No"}
                 />
                 <DetailRow
-                  label="Signed private preview loaded"
+                  label="Private preview loaded"
                   value={videoPreviewUrl ? "Yes" : "No"}
                 />
                 <DetailRow
@@ -19360,7 +19560,7 @@ function HighlightManagerPage({
               helper={
                 selectedAthlete?.isJunior
                   ? "Junior highlights default to the parent or guardian pathway until they are approved."
-                  : "Adults can still begin unverified and move through coach, club, or admin review."
+                  : "Adults can still begin unverified and move through coach, club, or review checks."
               }
             />
             <FormField
@@ -19784,6 +19984,7 @@ function ScoutSearchPage({
   shortlistSet,
   onShortlistAthlete,
 }) {
+  const visibleAthletes = athletes.filter(isPilotVisibleAthlete);
   const initialFilters = {
     query: "",
     sportCategory: "All",
@@ -19812,7 +20013,12 @@ function ScoutSearchPage({
     suburb: filters.postcodeSuburb,
     state: filters.state === "All" ? "" : filters.state,
   });
-  const sportOptions = ["All", ...new Set([...scoutNearbyDirectory.sports, ...getSimpleSportOptions()])];
+  const scoutPostcodeSummary = getNswPostcodeStarterSummary(filters.postcodeSuburb);
+  const scoutPostcodeSports = getNswPostcodeSportsByPostcode(filters.postcodeSuburb);
+  const sportOptions = [
+    "All",
+    ...new Set([...scoutNearbyDirectory.sports, ...scoutPostcodeSports, ...getSimpleSportOptions()]),
+  ];
   const ageOptions = usesStructuredScoutFilters
     ? ["All", ...NSW_RUGBY_LEAGUE_FILTER_AGE_GROUP_OPTIONS]
     : [
@@ -19828,7 +20034,7 @@ function ScoutSearchPage({
     : [
         "All",
         ...new Set(
-          athletes
+          visibleAthletes
             .filter((item) => filters.sport === "All" || item.sport === filters.sport)
             .map((item) => item.position)
             .filter(Boolean),
@@ -19840,17 +20046,17 @@ function ScoutSearchPage({
     : [
         "All",
         ...new Set(
-          athletes
+          visibleAthletes
             .filter((item) => filters.state === "All" || item.state === filters.state)
             .map((item) => item.region)
             .filter(Boolean),
         ),
       ];
   const competitionLevelOptions = usesStructuredScoutFilters
-    ? ["All", ...getNswRugbyLeagueCompetitionLevelOptions(filters.region)]
-    : [
+      ? ["All", ...getNswRugbyLeagueCompetitionLevelOptions(filters.region)]
+      : [
         "All",
-        ...new Set(athletes.map((item) => item.competitionLevel).filter(Boolean)),
+        ...new Set(visibleAthletes.map((item) => item.competitionLevel).filter(Boolean)),
       ];
   const scoutLocationClubSuggestions = [
     ...getClubSuggestionsByPostcode({
@@ -19878,7 +20084,7 @@ function ScoutSearchPage({
     "All",
     ...new Set([
       ...scoutClubSuggestions.map((item) => item.clubName),
-      ...athletes
+      ...visibleAthletes
         .filter((item) => {
           if (!sportFilterMatches(filters.sport, item.sport)) {
             return false;
@@ -19893,10 +20099,10 @@ function ScoutSearchPage({
     ]),
   ];
   const teamClubFilterLabel = "Club / team";
-  const verifiedResults = athletes.filter((item) => isVerifiedProfile(item)).length;
-  const openResults = athletes.filter((item) => getOpportunityCount(item) > 0).length;
+  const verifiedResults = visibleAthletes.filter((item) => isVerifiedProfile(item)).length;
+  const openResults = visibleAthletes.filter((item) => getOpportunityCount(item) > 0).length;
 
-  const filtered = athletes.filter((athlete) => {
+  const filtered = visibleAthletes.filter((athlete) => {
     const query = filters.query.trim().toLowerCase();
     const queryBlob = [
       athlete.displayName,
@@ -20003,7 +20209,7 @@ function ScoutSearchPage({
       <div className="dashboard-stat-grid">
         <MetricCard
           label="Athlete resumes"
-          value={`${athletes.length}`}
+          value={`${visibleAthletes.length}`}
           detail="Profiles currently visible in this search"
           tone="gold"
         />
@@ -20028,7 +20234,7 @@ function ScoutSearchPage({
             <h3>{filtered.length} athlete resumes match your search</h3>
           </div>
           <div className="inline-actions">
-            <span className="status-chip status-chip-success">Verified search environment</span>
+            <span className="status-chip status-chip-success">Safe search flow</span>
             <button className="button button-subtle inline-button" onClick={resetFilters} type="button">
               Reset Filters
             </button>
@@ -20109,8 +20315,8 @@ function ScoutSearchPage({
               </h4>
             </div>
             <p className="request-note">
-              {scoutNearbyDirectory.areaLabel
-                ? `${scoutNearbyDirectory.areaLabel} starter directory`
+              {scoutPostcodeSummary?.areaLabel || scoutNearbyDirectory.areaLabel
+                ? `${scoutPostcodeSummary?.areaLabel || scoutNearbyDirectory.areaLabel} - ${scoutPostcodeSummary?.directoryStatusLabel || "Starter area"}`
                 : "Region/group stays secondary. Start with postcode, then sport, club, age group, and position."}
             </p>
           </div>
@@ -20766,13 +20972,16 @@ function ParentDashboardPage({
   onApproveMediaAsset,
 }) {
   const [mediaApprovalStatus, setMediaApprovalStatus] = useState("");
-  const pendingProfiles = athletes.filter(
+  const visibleAthletes = athletes.filter(isPilotVisibleAthlete);
+  const visibleHighlights = highlights.filter(isPilotVisibleHighlight);
+  const visibleOpportunities = opportunities.filter(isPilotVisibleOpportunity);
+  const pendingProfiles = visibleAthletes.filter(
     (item) =>
       item.isJunior &&
       item.profileStatus === "Pending Parent Approval" &&
       item.contactRoute === "parent_guardian",
   );
-  const pendingHighlights = highlights.filter(
+  const pendingHighlights = visibleHighlights.filter(
     (item) => item.isJunior && item.approvalStatus === "Pending Parent Approval",
   );
   const pendingAthleteIds = Array.from(
@@ -20784,7 +20993,7 @@ function ParentDashboardPage({
   const juniorContactRequests = (contactRequests || [])
     .filter((item) => item.requestType === "contact_request" && item.to === "parent_guardian")
     .map((request) => ({
-      athlete: athletes.find((item) => item.id === request.athleteId) || null,
+      athlete: visibleAthletes.find((item) => item.id === request.athleteId) || null,
       request,
     }))
     .filter((item) => item.athlete);
@@ -20794,11 +21003,11 @@ function ParentDashboardPage({
     )
     .map((request) => ({
       request,
-      athlete: athletes.find((item) => item.id === request.athleteId) || null,
-      opportunity: opportunities.find((item) => item.id === request.opportunityId) || null,
+      athlete: visibleAthletes.find((item) => item.id === request.athleteId) || null,
+      opportunity: visibleOpportunities.find((item) => item.id === request.opportunityId) || null,
     }))
     .filter((item) => item.athlete && item.opportunity);
-  const profileHighlightMap = highlights.reduce((acc, highlight) => {
+  const profileHighlightMap = visibleHighlights.reduce((acc, highlight) => {
     if (!acc[highlight.athleteId]) {
       acc[highlight.athleteId] = [];
     }
@@ -20936,7 +21145,7 @@ function ParentDashboardPage({
           <h3>Private media waiting for parent approval</h3>
           <p className="card-body">
             This owner-scoped parent view keeps junior media private, approval-gated, and off
-            public routes until both guardian and admin review steps are complete.
+            public routes until both guardian and review steps are complete.
           </p>
           {mediaApprovalStatus ? <p className="request-note">{mediaApprovalStatus}</p> : null}
           {pendingJuniorMediaAssets.length === 0 ? (
@@ -22159,7 +22368,7 @@ function ProfilePreviewCard({ athlete, highlight, compact = false }) {
       ].slice(0, 3);
   const previewNote =
     opportunityBadges.length > 0
-      ? opportunityBadges.join(compact ? " • " : " / ")
+      ? opportunityBadges.join(compact ? " / " : " / ")
       : "Opportunity preferences will appear here once set.";
   const previewClassName = compact
     ? "surface-card profile-preview-card compact-preview-card"
@@ -22217,14 +22426,14 @@ function ProfilePreviewCard({ athlete, highlight, compact = false }) {
 
       {!compact ? (
         <div className="badge-row">
-          <span className="badge">{athlete.sportCategory || sportDefinition.category}</span>
+          <span className="badge">{athlete.sport || sportDefinition.name}</span>
           <span className="badge">{athlete.position || "Role not set"}</span>
           <span className="badge">{locationSummary}</span>
           <span className="badge">{athlete.competitionLevel || "Competition level not set"}</span>
         </div>
       ) : (
         <div className="badge-row compact-preview-badges">
-          <span className="badge">{athlete.sportCategory || sportDefinition.category}</span>
+          <span className="badge">{athlete.sport || sportDefinition.name}</span>
           <span className="badge">{getTeamVerificationLabel(athlete)}</span>
         </div>
       )}
@@ -22259,7 +22468,7 @@ function ProfilePreviewCard({ athlete, highlight, compact = false }) {
       {displayPreviewNote ? <p className="request-note">{displayPreviewNote}</p> : null}
 
       <Link className="button button-subtle" to={`/resume/${athlete.id}`}>
-        View Full Public Resume
+        View Full Resume
       </Link>
     </article>
   );
@@ -22273,7 +22482,7 @@ function HighlightWallCard({ athlete, highlight, onBoost }) {
         <strong>{highlight.statusLabel}</strong>
       </div>
 
-      <p className="card-kicker">{athlete.sportCategory || athlete.sport}</p>
+      <p className="card-kicker">{athlete.sport || "Sport"}</p>
       <h3>{highlight.title}</h3>
       <p className="card-meta">
         {joinMeta([
@@ -22385,7 +22594,7 @@ function ProfileHighlightCard({
       </div>
       <p className="request-note">
         {highlight.isJunior
-          ? "Showcase approval label is controlled by parent and admin review for junior athletes."
+          ? "Showcase approval label is controlled by parent approval for junior athletes."
           : "Talent Boost helps this clip stand out inside the premium highlight library."}
       </p>
       {showOwnerMediaStatus ? (
@@ -22496,9 +22705,9 @@ function CheckboxChip({ checked, label, onChange }) {
 
 function DetailRow({ label, value }) {
   return (
-    <div className="detail-row">
-      <dt>{label}</dt>
-      <dd>{value}</dd>
+    <div className="detail-row no-vertical-text">
+      <span className="detail-label">{label}</span>
+      <div className="detail-value">{value}</div>
     </div>
   );
 }
@@ -22690,5 +22899,4 @@ function FormField({
     </label>
   );
 }
-
 export default App;

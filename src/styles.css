@@ -1,29 +1,29 @@
 @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap");
 
 :root {
-  --bg: #050b14;
-  --bg-soft: #0a1625;
-  --bg-panel: rgba(12, 22, 36, 0.82);
-  --bg-panel-strong: rgba(10, 18, 30, 0.95);
-  --bg-panel-alt: rgba(16, 28, 44, 0.9);
-  --line: rgba(181, 197, 216, 0.16);
-  --line-strong: rgba(214, 169, 58, 0.26);
-  --text-main: #f7fbff;
-  --text-soft: #98a7bb;
-  --text-muted: #7f8ea5;
-  --gold: #d5a441;
-  --gold-soft: rgba(213, 164, 65, 0.18);
-  --electric: #2f7cf0;
-  --electric-soft: rgba(47, 124, 240, 0.17);
-  --success: #1db46c;
-  --success-soft: rgba(29, 180, 108, 0.16);
-  --danger: #ff6b6b;
-  --radius-xl: 30px;
-  --radius-lg: 22px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
+  --bg: #070707;
+  --bg-soft: #0b0d10;
+  --bg-panel: rgba(20, 23, 28, 0.92);
+  --bg-panel-strong: rgba(13, 16, 20, 0.98);
+  --bg-panel-alt: rgba(24, 28, 34, 0.92);
+  --line: rgba(210, 168, 74, 0.14);
+  --line-strong: rgba(210, 168, 74, 0.28);
+  --text-main: #f7f2e8;
+  --text-soft: #beb7aa;
+  --text-muted: #8f887c;
+  --gold: #c79a35;
+  --gold-soft: rgba(199, 154, 53, 0.16);
+  --electric: #d2a84a;
+  --electric-soft: rgba(210, 168, 74, 0.16);
+  --success: #4a9c68;
+  --success-soft: rgba(74, 156, 104, 0.16);
+  --danger: #c96a61;
+  --radius-xl: 22px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
   --shadow-deep: 0 30px 80px rgba(0, 0, 0, 0.42);
-  --shadow-card: 0 18px 48px rgba(2, 8, 16, 0.42);
+  --shadow-card: 0 18px 48px rgba(0, 0, 0, 0.38);
   --max-width: 1280px;
 }
 
@@ -42,9 +42,9 @@ body {
   color: var(--text-main);
   font-family: "Manrope", sans-serif;
   background:
-    radial-gradient(circle at top left, rgba(47, 124, 240, 0.17), transparent 28%),
-    radial-gradient(circle at top right, rgba(213, 164, 65, 0.16), transparent 22%),
-    linear-gradient(180deg, #040812 0%, #07111d 38%, #091521 100%);
+    radial-gradient(circle at top left, rgba(199, 154, 53, 0.14), transparent 26%),
+    radial-gradient(circle at top right, rgba(210, 168, 74, 0.1), transparent 20%),
+    linear-gradient(180deg, #050505 0%, #090b0e 44%, #0c1014 100%);
 }
 
 body::before,
@@ -57,23 +57,23 @@ body::after {
 }
 
 body::before {
-  opacity: 0.28;
+  opacity: 0.22;
   background:
-    linear-gradient(90deg, transparent 0 6%, rgba(255, 255, 255, 0.05) 6.15%, transparent 6.3%),
-    linear-gradient(0deg, transparent 0 80%, rgba(255, 255, 255, 0.04) 80.15%, transparent 80.3%),
+    linear-gradient(90deg, transparent 0 6%, rgba(255, 255, 255, 0.03) 6.15%, transparent 6.3%),
+    linear-gradient(0deg, transparent 0 80%, rgba(255, 255, 255, 0.025) 80.15%, transparent 80.3%),
     repeating-linear-gradient(
       90deg,
       transparent 0 7.5rem,
-      rgba(255, 255, 255, 0.03) 7.5rem 7.58rem
+      rgba(255, 255, 255, 0.02) 7.5rem 7.58rem
     );
 }
 
 body::after {
   z-index: -3;
-  opacity: 0.24;
+  opacity: 0.22;
   background:
-    radial-gradient(circle at 50% 120%, rgba(213, 164, 65, 0.28), transparent 32%),
-    radial-gradient(circle at 20% 15%, rgba(47, 124, 240, 0.18), transparent 24%);
+    radial-gradient(circle at 50% 120%, rgba(199, 154, 53, 0.22), transparent 30%),
+    radial-gradient(circle at 20% 15%, rgba(210, 168, 74, 0.12), transparent 24%);
 }
 
 a {
@@ -932,8 +932,8 @@ button {
 
 .detail-row {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.35rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.24rem;
   padding-bottom: 0.7rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -944,18 +944,34 @@ button {
 }
 
 .detail-row dt,
-.detail-row dd {
+.detail-row dd,
+.detail-label,
+.detail-value {
   margin: 0;
 }
 
-.detail-row dt {
+.detail-label {
   color: var(--text-soft);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.detail-row dd {
+.detail-value {
   text-align: left;
   font-weight: 700;
   color: var(--text-main);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.no-vertical-text,
+.safe-wrap {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .role-switch-grid {
@@ -2029,7 +2045,7 @@ body::after {
 .stat-card span,
 .stat-band-card span,
 .review-row p {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .detail-row dt,
@@ -6582,6 +6598,109 @@ body::after {
   }
 }
 
+/* Pilot layout fixes */
+:where(
+    .surface-card,
+    .hero-card,
+    .form-section-card,
+    .dashboard-panel,
+    .review-queue-card,
+    .parent-item-card,
+    .premium-search-card,
+    .create-profile-form-card,
+    .create-profile-side-card,
+    .search-board-card,
+    .filter-card,
+    .sport-pathway-strip,
+    .sport-space-detail-card,
+    .sport-space-summary,
+    .club-suggestion-button,
+    .choice-chip-button,
+    .badge,
+    .status-chip,
+    .button,
+    .detail-list,
+    .detail-row,
+    .card-body,
+    .card-meta,
+    .request-note,
+    .field-helper,
+    .hero-text,
+    .hero-keyline,
+    .hero-tagline,
+    .section-description,
+    .brand-note,
+    .brand-title,
+    .search-card-header,
+    .search-card-header h3,
+    .search-card-header p,
+    .review-row,
+    .review-row h4,
+    .review-row p
+  ) {
+  min-width: 0;
+}
+
+:where(
+    .card-body,
+    .card-meta,
+    .request-note,
+    .field-helper,
+    .hero-text,
+    .hero-keyline,
+    .hero-tagline,
+    .section-description,
+    .brand-note,
+    .brand-title,
+    .detail-row dt,
+    .detail-row dd,
+    .status-chip,
+    .badge,
+    .choice-chip-button,
+    .club-suggestion-button strong,
+    .club-suggestion-button span,
+    .review-row h4,
+    .review-row p
+  ) {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.detail-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.hero-banner-panel {
+  min-height: clamp(350px, 38vw, 520px);
+}
+
+.hero-banner-panel img {
+  min-height: clamp(350px, 38vw, 520px);
+  object-position: center 42%;
+}
+
+.concept-hero-shell.concept-hero-shell-visual-first {
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.18fr) !important;
+}
+
+.concept-hero-shell.concept-hero-shell-visual-first .hero-copy {
+  padding-right: 0.25rem;
+}
+
+.hero-banner-overlay-card {
+  max-width: min(100%, 26rem);
+}
+
+.brand-logo-badge {
+  min-width: 0;
+}
+
+.brand-logo-badge img {
+  flex: 0 0 auto;
+}
+
+
 .private-upload-panel {
   gap: 0.9rem;
 }
@@ -7353,6 +7472,411 @@ button.sport-pathway-pill:hover {
     width: 100%;
     justify-content: center;
     white-space: normal;
+  }
+
+  .surface-card,
+  .dashboard-panel,
+  .form-section-card,
+  .premium-search-card,
+  .review-queue-card,
+  .parent-item-card,
+  .home-preview-card,
+  .home-flow-card,
+  .hero-card,
+  .club-suggestion-button,
+  .sport-space-detail-card,
+  .search-board-card,
+  .create-profile-form-card {
+    min-width: 0;
+  }
+
+  .surface-card h2,
+  .surface-card h3,
+  .surface-card h4,
+  .dashboard-panel h3,
+  .dashboard-panel h4,
+  .form-section-card h3,
+  .form-section-card h4,
+  .request-note,
+  .card-body,
+  .card-meta,
+  .field-helper,
+  .club-suggestion-button strong,
+  .club-suggestion-button span,
+  .form-section-header h4 {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+}
+
+/* Visual system reboot */
+.surface-card,
+.hero-card,
+.dashboard-panel,
+.more-card,
+.create-profile-form-card,
+.create-profile-side-card,
+.form-section-card,
+.review-queue-card,
+.parent-item-card,
+.inline-info-card,
+.nested-card,
+.metric-card,
+.stat-card,
+.stat-band-card,
+.search-board-card,
+.premium-search-card,
+.role-card,
+.filter-card,
+.builder-progress-panel,
+.trust-summary-card,
+.partner-card,
+.basic-profile-summary-card,
+.profile-context-summary-card,
+.advanced-resume-toggle-card,
+.structured-selector-card,
+.family-flow-card,
+.postcode-directory-panel,
+.directory-details-card,
+.highlight-context-card,
+.highlight-optional-card {
+  border-radius: 18px !important;
+  border-color: rgba(210, 168, 74, 0.18) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34) !important;
+}
+
+.surface-card,
+.hero-card,
+.dashboard-panel,
+.more-card,
+.create-profile-form-card,
+.create-profile-side-card,
+.form-section-card,
+.review-queue-card,
+.parent-item-card,
+.inline-info-card,
+.nested-card,
+.metric-card,
+.stat-card,
+.stat-band-card,
+.search-board-card,
+.premium-search-card,
+.role-card,
+.filter-card,
+.builder-progress-panel,
+.trust-summary-card,
+.partner-card {
+  background:
+    linear-gradient(180deg, rgba(26, 30, 36, 0.98), rgba(16, 19, 24, 0.97)) !important;
+}
+
+.basic-profile-summary-card,
+.profile-context-summary-card,
+.advanced-resume-toggle-card,
+.structured-selector-card,
+.family-flow-card,
+.postcode-directory-panel,
+.directory-details-card,
+.highlight-context-card,
+.highlight-optional-card {
+  background:
+    linear-gradient(180deg, rgba(23, 26, 31, 0.98), rgba(18, 21, 26, 0.98)) !important;
+}
+
+.hero-card::before,
+.surface-card::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.03), transparent 34%),
+    radial-gradient(circle at top right, rgba(199, 154, 53, 0.12), transparent 24%) !important;
+}
+
+.metric-card {
+  border-color: rgba(199, 154, 53, 0.16) !important;
+}
+
+.metric-card .card-body {
+  color: #b9b2a6 !important;
+}
+
+.form-section-header,
+.search-card-header,
+.builder-topline,
+.search-board-topline,
+.hero-copy,
+.hero-banner-overlay-card,
+.review-row,
+.trust-summary-card,
+.partner-card {
+  color: var(--text-main);
+}
+
+.form-section-header h3,
+.form-section-header h4,
+.dashboard-panel h3,
+.dashboard-panel h4,
+.search-board-card h3,
+.premium-search-card h3,
+.review-queue-card h3,
+.parent-item-card h3,
+.role-card h3,
+.surface-card h3,
+.surface-card h4,
+.hero-copy h2 {
+  color: var(--text-main) !important;
+}
+
+.card-body,
+.card-meta,
+.request-note,
+.field-helper,
+.hero-text,
+.hero-keyline,
+.hero-tagline,
+.section-description,
+.brand-note,
+.brand-title {
+  color: var(--text-soft) !important;
+}
+
+.detail-list,
+.summary-grid,
+.status-grid,
+.opportunity-meta-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.detail-row {
+  padding-bottom: 0.72rem !important;
+  border-bottom-color: rgba(210, 168, 74, 0.12) !important;
+}
+
+.detail-label {
+  color: var(--text-muted) !important;
+}
+
+.detail-value {
+  color: var(--text-main) !important;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  color: var(--text-main) !important;
+  border-color: rgba(210, 168, 74, 0.18) !important;
+  background: rgba(12, 15, 19, 0.96) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 16px rgba(0, 0, 0, 0.18) !important;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: rgba(190, 183, 170, 0.7) !important;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  outline: 2px solid rgba(210, 168, 74, 0.18) !important;
+  border-color: rgba(210, 168, 74, 0.38) !important;
+}
+
+.button {
+  border-radius: 16px !important;
+}
+
+.button-primary {
+  color: #111111 !important;
+  background: linear-gradient(135deg, #c79a35, #e4c06a) !important;
+  box-shadow: 0 16px 30px rgba(199, 154, 53, 0.24) !important;
+}
+
+.button-secondary,
+.button-subtle,
+.button-electric {
+  color: var(--text-main) !important;
+  border-color: rgba(210, 168, 74, 0.22) !important;
+  background: rgba(19, 22, 27, 0.95) !important;
+}
+
+.button-secondary:hover,
+.button-secondary:focus-visible,
+.button-subtle:hover,
+.button-subtle:focus-visible,
+.button-electric:hover,
+.button-electric:focus-visible {
+  border-color: rgba(210, 168, 74, 0.36) !important;
+  background: rgba(24, 28, 34, 0.98) !important;
+}
+
+.badge,
+.status-chip,
+.role-chip,
+.nav-link,
+.checkbox-chip,
+.choice-chip-button,
+.club-suggestion-button,
+.quick-suggestion-button,
+.brand-logo-badge,
+.header-utility-pill,
+.desktop-nav-account {
+  border-radius: 14px !important;
+}
+
+.badge,
+.status-chip,
+.role-chip {
+  border-color: rgba(210, 168, 74, 0.18) !important;
+  background: rgba(20, 23, 28, 0.94) !important;
+  color: #f0e6cc !important;
+}
+
+.checkbox-chip,
+.choice-chip-button,
+.club-suggestion-button {
+  background: rgba(18, 21, 26, 0.96) !important;
+  border-color: rgba(210, 168, 74, 0.15) !important;
+}
+
+.checkbox-chip.active,
+.choice-chip-button.active,
+.club-suggestion-button.selected {
+  background: rgba(199, 154, 53, 0.12) !important;
+  border-color: rgba(210, 168, 74, 0.34) !important;
+}
+
+.nav-shell {
+  border-color: rgba(210, 168, 74, 0.14) !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)),
+    rgba(7, 9, 12, 0.94) !important;
+}
+
+.nav-link.active {
+  color: #f7f2e8 !important;
+  border-color: rgba(210, 168, 74, 0.34) !important;
+  background: linear-gradient(135deg, rgba(199, 154, 53, 0.2), rgba(199, 154, 53, 0.08)) !important;
+}
+
+.hero-banner-panel {
+  border-radius: 18px !important;
+  border: 1px solid rgba(210, 168, 74, 0.16) !important;
+  background: rgba(10, 12, 16, 0.92) !important;
+}
+
+.hero-banner-overlay-card {
+  border-radius: 16px !important;
+  border-color: rgba(210, 168, 74, 0.18) !important;
+  background: linear-gradient(180deg, rgba(16, 19, 24, 0.94), rgba(10, 12, 16, 0.96)) !important;
+}
+
+.concept-hero-copy h2 {
+  max-width: 14ch !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+}
+
+.hero-text {
+  max-width: 58ch !important;
+}
+
+.sport-space-panel,
+.sport-space-detail-card {
+  border-radius: 18px !important;
+  border: 1px solid rgba(199, 154, 53, 0.16) !important;
+  background: linear-gradient(180deg, #f6f0e6, #ece3d5) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22) !important;
+}
+
+.sport-space-summary h4,
+.sport-space-summary .card-body,
+.sport-space-summary .request-note,
+.sport-space-detail-card h4,
+.sport-space-detail-card .card-body,
+.sport-space-detail-card .request-note {
+  color: #211910 !important;
+}
+
+.sport-space-detail-card .badge {
+  background: rgba(18, 21, 26, 0.96) !important;
+  color: #f3e5c2 !important;
+}
+
+.create-profile-side-card .check-item p,
+.dashboard-panel .check-item p,
+.review-queue-card .check-item p,
+.parent-item-card .check-item p,
+.search-board-card .check-item p,
+.home-flow-card .check-item p {
+  color: var(--text-soft) !important;
+}
+
+.create-profile-side-card .check-mark,
+.dashboard-panel .check-mark,
+.review-queue-card .check-mark,
+.parent-item-card .check-mark,
+.search-board-card .check-mark,
+.home-flow-card .check-mark {
+  border-color: rgba(210, 168, 74, 0.28) !important;
+}
+
+.trust-statement {
+  background: linear-gradient(180deg, rgba(20, 23, 28, 0.98), rgba(13, 16, 20, 0.98)) !important;
+  border-color: rgba(210, 168, 74, 0.18) !important;
+}
+
+.trust-point {
+  border-color: rgba(210, 168, 74, 0.14) !important;
+  background: linear-gradient(180deg, rgba(17, 20, 25, 0.98), rgba(13, 16, 20, 0.98)) !important;
+}
+
+.trust-point h4,
+.trust-point p {
+  color: var(--text-soft) !important;
+}
+
+.home-preview-card,
+.profile-preview-card,
+.public-resume-summary,
+.public-resume-section,
+.public-contact-panel {
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, #f6f1e7 0%, #eee5d7 100%) !important;
+  border-color: rgba(199, 154, 53, 0.16) !important;
+}
+
+.home-preview-card .card-body,
+.profile-preview-card .card-body,
+.public-resume-summary .card-body,
+.public-resume-section .card-body,
+.public-contact-panel .card-body,
+.empty-state-card .card-body {
+  color: #4e4335 !important;
+}
+
+.empty-state-card {
+  border-radius: 18px !important;
+  background:
+    linear-gradient(180deg, rgba(20, 23, 28, 0.98), rgba(13, 16, 20, 0.98)) !important;
+  border: 1px solid rgba(210, 168, 74, 0.16) !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34) !important;
+}
+
+.empty-state-card .card-body,
+.empty-state-card h3,
+.empty-state-card .card-kicker {
+  color: var(--text-main) !important;
+}
+
+.summary-detail-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+@media (max-width: 759px) {
+  .summary-detail-grid,
+  .status-grid,
+  .opportunity-meta-grid {
+    grid-template-columns: 1fr;
   }
 }
 
