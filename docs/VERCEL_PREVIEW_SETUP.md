@@ -6,7 +6,7 @@ This document is for setting up a Vercel preview deployment for My Sports Resume
 
 - GitHub repository: https://github.com/ozbabyshopau-dev/my-sports-resume.git
 - Branch: `main`
-- Latest prepared commit: `92397c2` (`Polish logo hero and pilot profile flow`)
+- Latest prepared commit: `0a8be01` (`Improve readability and polish pilot UI`)
 
 ## Vercel Project Settings
 
