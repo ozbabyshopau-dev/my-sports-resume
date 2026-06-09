@@ -8203,3 +8203,207 @@ button.sport-pathway-pill:hover {
     max-width: 100% !important;
   }
 }
+
+/* Final contrast polish: keep the page dark, but stop UI elements from disappearing into it */
+.button-secondary {
+  color: #111418 !important;
+  background: linear-gradient(180deg, #f5efe4 0%, #e8dbc5 100%) !important;
+  border: 1px solid rgba(210, 168, 74, 0.36) !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22) !important;
+}
+
+.button-subtle {
+  color: #f7f2e8 !important;
+  background: rgba(21, 24, 30, 0.92) !important;
+  border: 1px solid rgba(210, 168, 74, 0.32) !important;
+}
+
+.button-electric {
+  color: #f7f2e8 !important;
+  background: linear-gradient(180deg, rgba(24, 28, 34, 0.96), rgba(15, 18, 22, 0.96)) !important;
+  border: 1px solid rgba(210, 168, 74, 0.28) !important;
+}
+
+.button-secondary:hover,
+.button-secondary:focus-visible {
+  background: linear-gradient(180deg, #f9f3e8 0%, #eadabf 100%) !important;
+  border-color: rgba(210, 168, 74, 0.5) !important;
+}
+
+.button-subtle:hover,
+.button-subtle:focus-visible,
+.button-electric:hover,
+.button-electric:focus-visible {
+  background: rgba(28, 32, 39, 0.98) !important;
+  border-color: rgba(210, 168, 74, 0.44) !important;
+}
+
+.badge,
+.status-chip {
+  border-color: rgba(210, 168, 74, 0.24) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: #f6efe3 !important;
+}
+
+.status-chip-success {
+  background: rgba(74, 156, 104, 0.18) !important;
+  border-color: rgba(74, 156, 104, 0.28) !important;
+  color: #e8fff3 !important;
+}
+
+.status-chip-opportunity {
+  background: rgba(210, 168, 74, 0.18) !important;
+  border-color: rgba(210, 168, 74, 0.32) !important;
+  color: #fff5da !important;
+}
+
+.sport-pathway-pill {
+  background: linear-gradient(180deg, rgba(24, 28, 35, 0.98), rgba(18, 22, 28, 0.98)) !important;
+  border-color: rgba(210, 168, 74, 0.34) !important;
+  color: #f7f2e8 !important;
+}
+
+.sport-pathway-pill-selected {
+  background: linear-gradient(180deg, #eed591 0%, #d2a84a 100%) !important;
+  border-color: rgba(210, 168, 74, 0.58) !important;
+  color: #111418 !important;
+}
+
+.surface-card,
+.hero-card,
+.dashboard-panel,
+.review-queue-card,
+.parent-item-card,
+.premium-search-card,
+.more-card,
+.create-profile-form-card,
+.create-profile-side-card,
+.nested-card,
+.form-section-card {
+  background:
+    linear-gradient(180deg, rgba(24, 28, 34, 0.98), rgba(17, 20, 26, 0.96)),
+    var(--bg-panel) !important;
+  border-color: rgba(210, 168, 74, 0.14) !important;
+}
+
+.dashboard-panel h3,
+.review-queue-card h3,
+.parent-item-card h3,
+.premium-search-card h3,
+.more-card h3,
+.create-profile-form-card h3,
+.create-profile-side-card h3,
+.nested-card h3,
+.form-section-card h3,
+.surface-card h3,
+.surface-card h4 {
+  color: #f7f2e8 !important;
+}
+
+.dashboard-panel .card-body,
+.review-queue-card .card-body,
+.parent-item-card .card-body,
+.premium-search-card .card-body,
+.more-card .card-body,
+.create-profile-form-card .card-body,
+.create-profile-side-card .card-body,
+.nested-card .card-body,
+.form-section-card .card-body,
+.surface-card .card-body,
+.surface-card .card-meta,
+.surface-card .request-note {
+  color: rgba(236, 229, 219, 0.88) !important;
+}
+
+.highlight-canvas,
+.wall-media,
+.video-strip,
+.featured-showcase-media {
+  background:
+    linear-gradient(135deg, rgba(13, 17, 22, 0.96), rgba(24, 28, 35, 0.98)),
+    rgba(13, 17, 22, 0.96) !important;
+  border-color: rgba(210, 168, 74, 0.22) !important;
+}
+
+.highlight-canvas strong,
+.wall-media strong,
+.video-strip strong,
+.featured-showcase-media strong {
+  color: #ffe5a7 !important;
+}
+
+.metric-card,
+.stat-card,
+.stat-band-card,
+.trust-point,
+.profile-preview-card .metric-card,
+.profile-preview-card .stat-card {
+  border-color: rgba(210, 168, 74, 0.18) !important;
+}
+
+.opportunity-card .detail-row,
+.dashboard-panel .detail-row,
+.review-queue-card .detail-row,
+.parent-item-card .detail-row {
+  background:
+    linear-gradient(180deg, rgba(24, 28, 34, 0.98), rgba(18, 22, 28, 0.96)),
+    rgba(24, 28, 34, 0.96) !important;
+  border-color: rgba(210, 168, 74, 0.16) !important;
+}
+
+.opportunity-card .detail-label,
+.dashboard-panel .detail-label,
+.review-queue-card .detail-label,
+.parent-item-card .detail-label {
+  color: #e5c982 !important;
+}
+
+.opportunity-card .detail-value,
+.dashboard-panel .detail-value,
+.review-queue-card .detail-value,
+.parent-item-card .detail-value {
+  color: #f7f2e8 !important;
+}
+
+.hero-banner-overlay-card {
+  background:
+    linear-gradient(180deg, rgba(15, 18, 22, 0.9), rgba(15, 18, 22, 0.82)) !important;
+  border-color: rgba(210, 168, 74, 0.24) !important;
+}
+
+.hero-banner-overlay-card h3,
+.hero-banner-overlay-card .card-body {
+  color: #f7f2e8 !important;
+}
+
+.sport-space-panel {
+  background:
+    radial-gradient(circle at top right, rgba(199, 154, 53, 0.14), transparent 24%),
+    linear-gradient(180deg, #f6f0e4 0%, #ede3d1 100%) !important;
+  border-color: rgba(199, 154, 53, 0.22) !important;
+}
+
+.sport-space-summary h4 {
+  color: #2c2113 !important;
+}
+
+.sport-space-summary .card-body,
+.sport-space-summary .request-note {
+  color: #4f4030 !important;
+}
+
+.sport-space-detail-card {
+  background: rgba(255, 252, 246, 0.96) !important;
+  border-color: rgba(199, 154, 53, 0.16) !important;
+}
+
+.sport-space-detail-card .badge {
+  background: rgba(24, 26, 31, 0.96) !important;
+  color: #f7f2e8 !important;
+  border-color: rgba(199, 154, 53, 0.18) !important;
+}
+
+.sport-space-detail-card .card-body,
+.sport-space-detail-card .request-note {
+  color: #4f4030 !important;
+}
